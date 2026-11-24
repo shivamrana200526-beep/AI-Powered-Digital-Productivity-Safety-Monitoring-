@@ -1,0 +1,14 @@
+{
+  "name": "@aipd/parent-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "@aipd/config": "*",
+    "@aipd/shared-types": "*",
+    "socket.io-client": "^4.7.5"
+  }
+}

@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudySafe - Child Learning & Safety Coach</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="icon" type="image/svg+xml" href="/assets/logo_badge.svg">
+  <link rel="alternate icon" type="image/png" href="/assets/logo_badge.png">
+  <link rel="stylesheet" href="styles.css">
+  <!-- Socket.IO Client with offline fallback -->
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script>if (typeof io === 'undefined') document.write('<script src="/socket.io/socket.io.js"><\/script>');</script>
+</head>
+<body>
+  <div id="app">
+
+    <!-- Non-blocking distraction notification toast -->
+    <div id="distraction-toast" class="distraction-toast hidden">
+      <div class="toast-icon">⚠️</div>
+      <div class="toast-content">
+        <h4 id="toast-title">Focus Reminder</h4>
+        <p id="toast-message">It looks like you opened an unrelated app. Let's return to your study task!</p>
+      </div>
+      <button id="toast-dismiss" class="btn-dismiss">&times;</button>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         SCREEN: CHILD LOGIN (Matching Top-Right Mockup)
+         ══════════════════════════════════════════════════════════ -->
+    <div id="auth-section" class="child-auth-page">
+      <div class="auth-top-bar">
+        <a href="/" class="back-link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span>Back</span>
+        </a>
+
+        <div class="nav-brand">
+          <div class="brand-emblem-small child-emblem">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+          </div>
+          <span class="brand-name">StudySafe</span>
+        </div>
+      </div>
+
+      <!-- Center Banner & Form Container -->
+      <div class="auth-card-container">
+        <!-- Top Artwork Banner with Focus Badge -->
+        <div class="auth-banner-wrap child-banner">
+          <div class="quote-handwriting-banner child-quote executive-badge">
+            ⚡ Focus Workstation<br>Deep Work Mode<br>&amp; AI Productivity Coach
+          </div>
+          <img src="./assets/child_login_banner.png" alt="Student Workstation" class="child-banner-img">
+        </div>
+
+        <!-- Main Form Card -->
+        <div class="child-login-card">
+          <h2 class="auth-card-title">Student Focus Studio</h2>
+          <p class="auth-card-subtitle">Distraction-free workspace with intelligent study coaching.</p>
+
+          <div class="auth-tabs">
+            <button type="button" id="tab-login" class="tab-btn active">Sign In</button>
+            <button type="button" id="tab-register" class="tab-btn">Create Account</button>
+          </div>
+
+          <div class="form-and-features-grid">
+            <!-- Left: Child Login Form -->
+            <form id="auth-form" class="child-form">
+              <div id="name-group" class="form-group hidden">
+                <label>Full Name</label>
+                <div class="input-icon-wrap">
+                  <span class="input-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  </span>
+                  <input type="text" id="name-input" placeholder="Enter your full name">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Email or Username</label>
+                <div class="input-icon-wrap">
+                  <span class="input-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  </span>
+                  <input type="text" id="email-input" placeholder="name@example.com or student" required autocomplete="username">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Password</label>
+                <div class="input-icon-wrap">
+                  <span class="input-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </span>
+                  <input type="password" id="password-input" placeholder="Enter your password" required>
+                  <button type="button" class="eye-toggle" onclick="toggleStudentPassword()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-extras">
+                <label class="remember-me">
+                  <input type="checkbox" checked>
+                  <span>Remember me</span>
+                </label>
+                <a href="#" class="forgot-link">Forgot password?</a>
+              </div>
+
+              <div id="auth-error" class="alert-error hidden"></div>
+
+              <button type="submit" id="auth-submit-btn" class="btn-child-login">
+                <span>Login</span>
+                <span class="btn-arrow">→</span>
+              </button>
+
+              <button type="button" id="demo-student-btn" class="btn-demo-quick btn-demo-student-quick" onclick="loginAsDemoStudent()">
+                <span>⚡ 1-Click Demo Login (Alex Jenkins)</span>
+              </button>
+
+              <div class="social-divider">
+                <span>or continue with</span>
+              </div>
+
+              <div class="social-login-row">
+                <button type="button" class="social-btn google-btn" onclick="handleSocialLogin('Google')">
+                  <svg width="18" height="18" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.33 24 12 24z"/>
+                    <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.15 0 9.99 0 12s.45 3.85 1.24 5.42l4.04-3.15z"/>
+                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                  </svg>
+                  <span>Google</span>
+                </button>
+                <button type="button" class="social-btn ms-btn" onclick="handleSocialLogin('Microsoft')">
+                  <svg width="18" height="18" viewBox="0 0 23 23">
+                    <path fill="#f35325" d="M1 1h10v10H1z"/>
+                    <path fill="#81bc06" d="M12 1h10v10H12z"/>
+                    <path fill="#05a6f0" d="M1 12h10v10H1z"/>
+                    <path fill="#ffba08" d="M12 12h10v10H12z"/>
+                  </svg>
+                  <span>Microsoft</span>
+                </button>
+              </div>
+
+              <div style="text-align: center; margin-top: 14px; font-size: 11px; color: #64748b;">
+                Quick Demo: <a href="javascript:void(0)" onclick="fillStudentDemo()" style="color: #3b82f6; font-weight: 600; text-decoration: underline;">Use Demo Student Credentials</a>
+              </div>
+
+              <div class="auth-switch-link">
+                <span>Don't have an account?</span>
+                <a href="javascript:void(0)" onclick="document.getElementById('tab-register').click()">Sign up</a>
+              </div>
+            </form>
+
+            <!-- Right: Student Features Column -->
+            <div class="auth-features-col">
+              <div class="feature-item">
+                <div class="feature-icon blue-icon">🎯</div>
+                <div class="feature-text">
+                  <strong>Deep Work</strong>
+                  <span>Timed sessions</span>
+                </div>
+              </div>
+
+              <div class="feature-item">
+                <div class="feature-icon cyan-icon">🧠</div>
+                <div class="feature-text">
+                  <strong>AI Guidance</strong>
+                  <span>Relevance tracking</span>
+                </div>
+              </div>
+
+              <div class="feature-item">
+                <div class="feature-icon amber-icon">📈</div>
+                <div class="feature-text">
+                  <strong>Focus Score</strong>
+                  <span>Explainable metrics</span>
+                </div>
+              </div>
+
+              <div class="feature-item">
+                <div class="feature-icon purple-icon">🛡️</div>
+                <div class="feature-text">
+                  <strong>Protected</strong>
+                  <span>Supervised space</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="auth-footer-note child-footer-note">
+          StudySafe Autonomous Productivity Architecture
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ══════════════════════════════════════════════════════════
+         SCREEN: DEVICE PAIRING (For linking student PC to parent)
+         ══════════════════════════════════════════════════════════ -->
+    <div id="pairing-section" class="center-content-box hidden">
+      <div class="white-modal-card">
+        <div class="card-brand-header">
+          <div class="brand-emblem-small child-emblem">AI</div>
+          <h3>Pair Student Device</h3>
+        </div>
+        <p class="subtext">Enter the 6-character pairing code displayed on your parent's dashboard:</p>
+
+        <form id="pairing-form" class="standard-form">
+          <div class="form-group">
+            <label>Pairing Code</label>
+            <input type="text" id="pairing-code-input" class="code-box-input" placeholder="e.g. K8M4P2" maxlength="12" required>
+          </div>
+          <div class="form-group">
+            <label>Device Name</label>
+            <input type="text" id="device-name-input" placeholder="e.g. My Laptop" required>
+          </div>
+
+          <div id="pairing-error" class="alert-error hidden"></div>
+          <div id="pairing-success" class="alert-success hidden"></div>
+
+          <button type="submit" class="btn-child-login">Pair Device</button>
+
+          <button type="button" class="btn-demo-quick" onclick="quickPairWithDemoParent()">
+            <span>⚡ 1-Click Quick Pair (Demo Parent: Sarah)</span>
+          </button>
+
+          <div class="pairing-help-box" style="margin-top: 18px; padding: 14px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; font-size: 12px; color: #64748B; text-align: left; line-height: 1.5;">
+            <strong style="color: #0F172A; display: block; margin-bottom: 4px;">💡 How to connect with your parent:</strong>
+            1. Open the <strong><a href="/parent" target="_blank" style="color: #0284C7; text-decoration: underline;">Parent Dashboard</a></strong> in another tab.<br>
+            2. Go to <strong>"⚙️ Devices & Pairing"</strong> ➔ click <strong>"+ Generate Pairing Code"</strong>.<br>
+            3. Enter that 6-character code above, or click the quick demo pair button.
+          </div>
+        </form>
+      </div>
+    </div>
+
+
+    <!-- ══════════════════════════════════════════════════════════
+         SCREEN: CHILD DASHBOARD (Matching Bottom-Middle Mockup)
+         ══════════════════════════════════════════════════════════ -->
+    <div id="task-section" class="child-dashboard-shell hidden">
+
+      <!-- Left Sidebar (Dark Navy #0F172A) -->
+      <aside class="sidebar-nav">
+        <div class="sidebar-top">
+          <!-- Logo & Mode Badge -->
+          <div class="sidebar-brand">
+            <div class="brand-emblem-small child-emblem">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+              </svg>
+            </div>
+            <span class="brand-name">StudySafe</span>
+          </div>
+
+          <div class="mode-badge-pill child-pill">
+            <span class="mode-dot blue"></span>
+            <span>Child Mode</span>
+          </div>
+
+          <!-- Navigation Links -->
+          <nav class="sidebar-menu">
+            <button class="nav-btn active">
+              <span class="menu-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              </span>
+              <span>Home</span>
+            </button>
+            <button class="nav-btn">
+              <span class="menu-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              </span>
+              <span>My Learning</span>
+            </button>
+            <button class="nav-btn">
+              <span class="menu-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              </span>
+              <span>Assignments</span>
+            </button>
+            <button class="nav-btn">
+              <span class="menu-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              </span>
+              <span>Progress</span>
+            </button>
+            <button class="nav-btn">
+              <span class="menu-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+              </span>
+              <span>Achievements</span>
+            </button>
+            <button class="nav-btn">
+              <span class="menu-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+              </span>
+              <span>Explore</span>
+            </button>
+            <button class="nav-btn">
+              <span class="menu-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </span>
+              <span>Safety Tips</span>
+            </button>
+            <button class="nav-btn">
+              <span class="menu-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              </span>
+              <span>Settings</span>
+            </button>
+          </nav>
+        </div>
+
+        <!-- Bottom User Card -->
+        <div class="sidebar-bottom">
+          <div id="user-pill" class="user-card">
+            <div class="user-avatar child-avatar">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div class="user-details">
+              <span id="user-name" class="user-name">Student</span>
+              <span class="user-sub">Student Profile</span>
+            </div>
+            <button id="logout-btn" class="btn-sidebar-logout" title="Sign Out">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content Area (Light Grey #F4F7FB) -->
+      <main class="dashboard-main">
+
+        <!-- Header -->
+        <header class="main-header">
+          <div class="header-greeting">
+            <h1 id="student-greeting">Hi, Student</h1>
+            <p id="student-subgreeting">Ready to learn something new today?</p>
+          </div>
+
+          <div class="header-actions">
+            <!-- Search bar -->
+            <div class="search-bar-wrap">
+              <span class="search-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              </span>
+              <input type="text" placeholder="Search lessons, topics...">
+            </div>
+
+            <!-- Bell -->
+            <button class="icon-btn" title="Notifications">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </button>
+          </div>
+        </header>
+
+        <!-- Top Row: Today's Goal + Streak + Rewards (Row 1) -->
+        <div class="child-stat-cards-grid mb-24">
+          <!-- Card 1: Today's Goal (With Study Task Start Form) -->
+          <div class="white-card goal-card">
+            <div class="goal-header">
+              <div>
+                <span class="eyebrow-text">Today's Goal</span>
+                <h3 class="goal-title" id="goal-title">Complete 3 learning tasks</h3>
+              </div>
+              <div class="rocket-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+              </div>
+            </div>
+
+            <!-- Progress bar -->
+            <div class="goal-progress-wrap">
+              <div class="progress-track">
+                <div id="goal-progress-fill" class="progress-fill fill-blue" style="width: 0%"></div>
+              </div>
+              <span class="goal-fraction" id="goal-fraction">0 / 3</span>
+            </div>
+
+            <!-- Study Task Input Form -->
+            <form id="task-form" class="start-task-form">
+              <div class="input-task-row">
+                <input type="text" id="task-input" placeholder="e.g. Complete Java binary tree traversal exercises" required>
+                <button type="submit" class="btn-start-study">Start Study Session →</button>
+              </div>
+              <div class="privacy-caption">
+                Transparent Supervision • Screen context captured every 2 mins • Keystrokes never logged
+              </div>
+            </form>
+          </div>
+
+          <!-- Card 2: Streak -->
+          <div class="white-card streak-card">
+            <div class="streak-icon-wrap">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <div class="streak-details">
+              <div class="streak-num" id="streak-count">--</div>
+              <span class="streak-label">Day Streak</span>
+              <span class="streak-sub" id="streak-sub">Loading...</span>
+            </div>
+          </div>
+
+          <!-- Card 3: Reward Points -->
+          <div class="white-card reward-card">
+            <div class="reward-icon-wrap">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+            </div>
+            <div class="reward-details">
+              <div class="reward-num" id="reward-points">--</div>
+              <span class="reward-label">Reward Points</span>
+              <span class="reward-sub" id="reward-sub">Loading...</span>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Middle Row: Continue Learning (Row 2) -->
+        <div class="white-card mb-24">
+          <div class="card-header-row">
+            <h3>Continue Learning</h3>
+            <button class="card-action-link">View All</button>
+          </div>
+
+          <div class="continue-learning-grid">
+            <!-- Subject 1: Mathematics -->
+            <div class="subject-card" onclick="selectSubject('Mathematics: Fractions & Decimals')">
+              <div class="subject-top">
+                <div class="subject-icon purple-sub">📐</div>
+                <div>
+                  <strong>Mathematics</strong>
+                  <span>Fractions & Decimals</span>
+                </div>
+              </div>
+              <span class="continue-arrow">→ Continue</span>
+            </div>
+
+            <!-- Subject 2: Science -->
+            <div class="subject-card" onclick="selectSubject('Science: The Solar System')">
+              <div class="subject-top">
+                <div class="subject-icon green-sub">🪐</div>
+                <div>
+                  <strong>Science</strong>
+                  <span>The Solar System</span>
+                </div>
+              </div>
+              <span class="continue-arrow">→ Continue</span>
+            </div>
+
+            <!-- Subject 3: English -->
+            <div class="subject-card" onclick="selectSubject('English: Reading Comprehension')">
+              <div class="subject-top">
+                <div class="subject-icon blue-sub">📖</div>
+                <div>
+                  <strong>English</strong>
+                  <span>Reading Comprehension</span>
+                </div>
+              </div>
+              <span class="continue-arrow">→ Continue</span>
+            </div>
+
+            <!-- Subject 4: Computer Science -->
+            <div class="subject-card" onclick="selectSubject('Computer Science: Basics of Java')">
+              <div class="subject-top">
+                <div class="subject-icon cyan-sub">💻</div>
+                <div>
+                  <strong>Computer Science</strong>
+                  <span>Basics of Java</span>
+                </div>
+              </div>
+              <span class="continue-arrow">→ Continue</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Row: Upcoming Tasks + Encouragement Banner (Row 3) -->
+        <div class="grid-2-col">
+          <!-- Left: Study Tasks & Goals (Assigned by Parent or Proposed by Student) -->
+          <div class="white-card">
+            <div class="card-header-row">
+              <div>
+                <h3>Study Tasks</h3>
+                <span class="subtext" style="font-size: 11px; color: #64748B;">Assigned by parent & proposed by you</span>
+              </div>
+              <button type="button" class="btn-outline-small" onclick="openProposeTaskModal()" style="font-size: 11px; padding: 5px 12px; border-radius: 6px; cursor: pointer; border: 1px solid #3B82F6; color: #2563EB; background: #EFF6FF; font-weight: 600;">+ Propose New Task</button>
+            </div>
+
+            <div id="student-tasks-container" class="upcoming-tasks-list">
+              <div class="empty-state">Loading your study tasks...</div>
+            </div>
+          </div>
+
+          <!-- Right: Encouragement Banner -->
+          <div class="white-card encouragement-card">
+            <div class="encourage-content">
+              <h3>Keep going, <span id="encourage-name">there</span>!</h3>
+              <p class="encourage-quote">"Big progress starts with small steps!"</p>
+              <button class="btn-gradient-blue" onclick="document.getElementById('task-input').focus()">
+                <span>Explore More</span>
+                <span>→</span>
+              </button>
+            </div>
+            <div class="encourage-img-wrap">
+              <img src="./assets/student_encourage.png" alt="Student Celebration" class="encourage-art">
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+
+
+    <!-- ══════════════════════════════════════════════════════════
+         SCREEN: ACTIVE STUDY SESSION VIEW
+         ══════════════════════════════════════════════════════════ -->
+    <div id="active-session-section" class="active-session-shell hidden">
+      <div class="active-session-card">
+        <div class="active-header">
+          <div class="live-badge-pill">
+            <span class="live-dot"></span>
+            <span>LIVE STUDY SESSION</span>
+          </div>
+          <div id="session-timer" class="session-timer-display">00:00:00</div>
+        </div>
+
+        <div class="current-task-box">
+          <span class="eyebrow-text">Active Study Task:</span>
+          <h2 id="active-task-display">Active Study Task</h2>
+        </div>
+
+        <div class="monitor-indicators-row">
+          <div class="indicator-box">
+            <span class="ind-label">Monitoring</span>
+            <span class="ind-val text-green">CONNECTED</span>
+          </div>
+          <div class="indicator-box">
+            <span class="ind-label">2-Min Captures</span>
+            <span class="ind-val text-blue">AUTO (2 MIN)</span>
+          </div>
+          <div class="indicator-box">
+            <span class="ind-label">Current Focus</span>
+            <span id="current-status-badge" class="ind-val text-green">ON TASK</span>
+          </div>
+        </div>
+
+        <div class="session-end-row">
+          <button id="end-session-btn" class="btn-end-session">End Session & Generate Report</button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ══════════════════════════════════════════════════════════
+         SCREEN: POST-SESSION STUDY REPORT VIEW
+         ══════════════════════════════════════════════════════════ -->
+    <div id="report-section" class="post-report-shell hidden">
+      <div class="white-card report-result-card">
+        <div class="report-top-header">
+          <h2>Study Session Report</h2>
+          <p id="report-task-title" class="subtext">Task completed</p>
+        </div>
+
+        <div class="score-display-row">
+          <div class="score-circle-large">
+            <span id="report-focus-score" class="score-big-num">95</span>
+            <span class="score-label">FOCUS SCORE</span>
+          </div>
+
+          <div class="report-stats-breakdown">
+            <div class="rep-stat-item">
+              <span>Total Session:</span>
+              <strong id="rep-total">45 mins</strong>
+            </div>
+            <div class="rep-stat-item">
+              <span>Productive Time:</span>
+              <strong id="rep-prod" class="text-green">42 mins</strong>
+            </div>
+            <div class="rep-stat-item">
+              <span>Distractions:</span>
+              <strong id="rep-dist" class="text-amber">2 mins</strong>
+            </div>
+            <div class="rep-stat-item">
+              <span>Idle Time:</span>
+              <strong id="rep-idle" class="text-gray">1 min</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-insights-box">
+          <h3>AI Coach Insights</h3>
+          <p id="report-summary-text"></p>
+          <div id="report-recommendations" class="recs-list-simple"></div>
+        </div>
+
+        <button id="new-session-btn" class="btn-gradient-blue" style="width: 100%; justify-content: center; padding: 12px;">Start New Session</button>
+      </div>
+    </div>
+
+    <!-- Propose New Task Modal -->
+    <div id="propose-task-modal" class="modal-overlay hidden">
+      <div class="modal-content" style="max-width: 480px;">
+        <div class="modal-header">
+          <div>
+            <h3>Propose Study Task</h3>
+            <span class="subtext" style="font-size: 12px; color: #94A3B8;">Send a new task request directly to your parent</span>
+          </div>
+          <button class="modal-close-btn" onclick="closeProposeTaskModal()">&times;</button>
+        </div>
+        <form id="propose-task-form" onsubmit="handleProposeTask(event)">
+          <div class="form-group mb-16">
+            <label style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Task Title *</label>
+            <input type="text" id="propose-task-title" placeholder="e.g. Read Chapter 3 History & Write Notes" required style="width:100%;padding:10px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#f8fafc;box-sizing:border-box;">
+          </div>
+          <div class="form-group mb-16">
+            <label style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Subject</label>
+            <select id="propose-task-subject" style="width:100%;padding:10px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#f8fafc;">
+              <option value="Mathematics">Mathematics</option>
+              <option value="Science">Science</option>
+              <option value="English">English</option>
+              <option value="Computer Science">Computer Science</option>
+              <option value="History">History</option>
+              <option value="General">General Study</option>
+            </select>
+          </div>
+          <div class="form-group mb-16">
+            <label style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;">Notes for Parent (Optional)</label>
+            <textarea id="propose-task-desc" rows="2" placeholder="Describe what you plan to accomplish..." style="width:100%;padding:10px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#f8fafc;box-sizing:border-box;"></textarea>
+          </div>
+          <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:16px;">
+            <button type="button" class="btn-secondary" onclick="closeProposeTaskModal()">Cancel</button>
+            <button type="submit" class="btn-start-study" style="padding:8px 18px;">Send to Parent →</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    function toggleStudentPassword() {
+      const field = document.getElementById('password-input');
+      field.type = field.type === 'password' ? 'text' : 'password';
+    }
+
+    function selectSubject(subjectName) {
+      const input = document.getElementById('task-input');
+      if (input) {
+        input.value = `Study ${subjectName}`;
+        input.focus();
+      }
+    }
+  </script>
+</body>
+</html>

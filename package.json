@@ -1,0 +1,30 @@
+{
+  "name": "ai-study-safety-coach",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-Powered Digital Productivity & Safety Monitoring System",
+  "workspaces": [
+    "packages/*",
+    "services/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "start": "node scripts/start-all.js",
+    "test": "npm --workspaces --if-present test",
+    "build": "npm --workspaces --if-present run build",
+    "start:api": "npm run dev -w @aipd/api",
+    "start:n8n": "node docs/n8n/start-n8n.js",
+    "start:parent": "npm run dev -w @aipd/parent-dashboard",
+    "start:student": "npm run dev -w @aipd/student-desktop"
+  },
+  "keywords": [
+    "ai",
+    "productivity",
+    "safety",
+    "electron",
+    "education",
+    "monitoring"
+  ],
+  "author": "Google Deepmind Team",
+  "license": "MIT"
+}

@@ -1,0 +1,217 @@
+{
+  "name": "AIPD Parent Security Shield & Anti-Tamper Alerts",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "aipd-security-alert",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook-1",
+      "name": "AIPD Alert Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "aipd-security-alert"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-critical",
+              "leftValue": "={{ $json.body.severity }}",
+              "rightValue": "CRITICAL",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-high",
+              "leftValue": "={{ $json.body.severity }}",
+              "rightValue": "HIGH",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "any"
+        }
+      },
+      "id": "node-if-severity",
+      "name": "Is High or Critical Alert?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "assign-1",
+              "name": "alertTitle",
+              "value": "=\ud83d\udea8 AIPD SECURITY ALERT: {{ $json.body.event }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-2",
+              "name": "alertMessage",
+              "value": "=\u26a0\ufe0f Alert Type: {{ $json.body.event }}\n\ud83d\udc64 Parent Account: {{ $json.body.actor.name || 'Parent' }}\n\ud83d\udcbb Target Device: {{ $json.body.device ? $json.body.device.name : 'Parent Tablet/Phone' }}\n\u23f0 Timestamp: {{ $json.body.timestamp }}\n\ud83d\udca1 Action Required: {{ $json.body.recommendedAction || 'Investigate immediately' }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-3",
+              "name": "severity",
+              "value": "={{ $json.body.severity }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-4",
+              "name": "processed",
+              "value": "=true",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-format-urgent",
+      "name": "Format Urgent Alert",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [720, 180]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "assign-5",
+              "name": "alertTitle",
+              "value": "=\u2139\ufe0f AIPD Security Log: {{ $json.body.event }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-6",
+              "name": "alertMessage",
+              "value": "={{ $json.body.event }} authorized at {{ $json.body.timestamp }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-7",
+              "name": "severity",
+              "value": "={{ $json.body.severity }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-8",
+              "name": "processed",
+              "value": "=true",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-format-info",
+      "name": "Format Info Log",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [720, 420]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"success\": true, \"processed\": true, \"alertTitle\": \"{{ $json.alertTitle }}\", \"severity\": \"{{ $json.severity }}\" }",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "node-respond-urgent",
+      "name": "Respond OK (Urgent)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [960, 180]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"success\": true, \"processed\": true, \"alertTitle\": \"{{ $json.alertTitle }}\", \"severity\": \"{{ $json.severity }}\" }",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "node-respond-info",
+      "name": "Respond OK (Info)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [960, 420]
+    }
+  ],
+  "connections": {
+    "AIPD Alert Webhook": {
+      "main": [
+        [
+          {
+            "node": "Is High or Critical Alert?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is High or Critical Alert?": {
+      "main": [
+        [
+          {
+            "node": "Format Urgent Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Info Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Urgent Alert": {
+      "main": [
+        [
+          {
+            "node": "Respond OK (Urgent)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Info Log": {
+      "main": [
+        [
+          {
+            "node": "Respond OK (Info)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudySafe - Parent Supervision Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/assets/logo_badge.svg">
+  <link rel="alternate icon" type="image/png" href="/assets/logo_badge.png">
+  <link rel="stylesheet" href="styles.css">
+  <!-- Socket.IO Client with offline fallback -->
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script>if (typeof io === 'undefined') document.write('<script src="/socket.io/socket.io.js"><\/script>');</script>
+</head>
+<body>
+  <div id="app">
+
+    <!-- ══════════════════════════════════════════════════════════
+         SCREEN: PARENT LOGIN (Matching Top-Middle Mockup)
+         ══════════════════════════════════════════════════════════ -->
+    <div id="auth-view" class="parent-auth-page">
+      <div class="auth-top-bar">
+        <a href="/" class="back-link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span>Back</span>
+        </a>
+
+        <div class="nav-brand">
+          <div class="brand-emblem-small">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+          </div>
+          <span class="brand-name">StudySafe</span>
+        </div>
+      </div>
+
+      <!-- Center Banner & Form Card -->
+      <div class="auth-card-container">
+        <!-- Top Artwork Banner with Executive Badge -->
+        <div class="auth-banner-wrap">
+          <div class="quote-handwriting-banner executive-badge">
+            🛡️ Executive Console<br>Live Screen Audits<br>& Anti-Tamper Guard
+          </div>
+          <img src="./assets/parent_login_banner.png" alt="Parent Supervision" class="parent-banner-img">
+        </div>
+
+        <!-- Main Form Card -->
+        <div class="parent-login-card">
+          <h2 class="auth-card-title">Parent Supervision Console</h2>
+          <p class="auth-card-subtitle">Real-time activity classification, focus metrics, and tamper defense.</p>
+
+          <div class="auth-tabs">
+            <button type="button" id="tab-login" class="tab-btn active">Sign In</button>
+            <button type="button" id="tab-register" class="tab-btn">Create Account</button>
+          </div>
+
+          <div class="form-and-features-grid">
+            <!-- Left: Login Form -->
+            <form id="auth-form" class="parent-form">
+              <div id="name-field" class="form-group hidden">
+                <label>Full Name</label>
+                <div class="input-icon-wrap">
+                  <span class="input-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  </span>
+                  <input type="text" id="parent-name" placeholder="Enter your full name">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Email or Username</label>
+                <div class="input-icon-wrap">
+                  <span class="input-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  </span>
+                  <input type="text" id="parent-email" placeholder="name@example.com or parent" required autocomplete="username">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Password</label>
+                <div class="input-icon-wrap">
+                  <span class="input-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </span>
+                  <input type="password" id="parent-password" placeholder="Enter your password" required>
+                  <button type="button" class="eye-toggle" onclick="togglePasswordVisibility('parent-password', this)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-extras">
+                <label class="remember-me">
+                  <input type="checkbox" checked>
+                  <span>Remember me</span>
+                </label>
+                <a href="#" class="forgot-link">Forgot password?</a>
+              </div>
+
+              <div id="auth-error" class="alert-error hidden"></div>
+
+              <button type="submit" id="auth-submit-btn" class="btn-parent-login">
+                <span>Login</span>
+                <span class="btn-arrow">→</span>
+              </button>
+
+              <button type="button" id="demo-parent-btn" class="btn-demo-quick btn-demo-parent-quick" onclick="loginAsDemoParent()">
+                <span>⚡ 1-Click Demo Login (Sarah Jenkins)</span>
+              </button>
+
+              <div class="social-divider">
+                <span>or continue with</span>
+              </div>
+
+              <div class="social-login-row">
+                <button type="button" class="social-btn google-btn" onclick="handleSocialLogin('Google')">
+                  <svg width="18" height="18" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.33 24 12 24z"/>
+                    <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.15 0 9.99 0 12s.45 3.85 1.24 5.42l4.04-3.15z"/>
+                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                  </svg>
+                  <span>Google</span>
+                </button>
+                <button type="button" class="social-btn ms-btn" onclick="handleSocialLogin('Microsoft')">
+                  <svg width="18" height="18" viewBox="0 0 23 23">
+                    <path fill="#f35325" d="M1 1h10v10H1z"/>
+                    <path fill="#81bc06" d="M12 1h10v10H12z"/>
+                    <path fill="#05a6f0" d="M1 12h10v10H1z"/>
+                    <path fill="#ffba08" d="M12 12h10v10H12z"/>
+                  </svg>
+                  <span>Microsoft</span>
+                </button>
+              </div>
+
+              <div style="text-align: center; margin-top: 14px; font-size: 11px; color: #64748b;">
+                Quick Demo: <a href="javascript:void(0)" onclick="fillParentDemo()" style="color: #6366f1; font-weight: 600; text-decoration: underline;">Use Demo Parent Credentials</a>
+              </div>
+
+              <div class="auth-switch-link">
+                <span>Don't have an account?</span>
+                <a href="javascript:void(0)" onclick="document.getElementById('tab-register').click()">Sign up</a>
+              </div>
+            </form>
+
+            <!-- Right: Features Column -->
+            <div class="auth-features-col">
+              <div class="feature-item">
+                <div class="feature-icon blue-icon">📊</div>
+                <div class="feature-text">
+                  <strong>Focus Metrics</strong>
+                  <span>Deterministic scoring</span>
+                </div>
+              </div>
+
+              <div class="feature-item">
+                <div class="feature-icon purple-icon">🛡️</div>
+                <div class="feature-text">
+                  <strong>Tamper Shield</strong>
+                  <span>PIN & lockout gate</span>
+                </div>
+              </div>
+
+              <div class="feature-item">
+                <div class="feature-icon rose-icon">⚡</div>
+                <div class="feature-text">
+                  <strong>Instant Audits</strong>
+                  <span>Screen capture & n8n</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="auth-footer-note">
+          AIPD Enterprise Safety &amp; Focus Architecture
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ══════════════════════════════════════════════════════════
+         SCREEN: PARENT DASHBOARD (Matching Bottom-Left Mockup)
+         ══════════════════════════════════════════════════════════ -->
+    <div id="dashboard-view" class="dashboard-shell hidden">
+
+      <!-- Left Sidebar (Dark Navy #0E1526) -->
+      <aside class="sidebar-nav">
+        <div class="sidebar-top">
+          <!-- Logo & Mode Badge -->
+          <div class="sidebar-brand">
+            <div class="brand-emblem-small">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+              </svg>
+            </div>
+            <span class="brand-name">StudySafe</span>
+          </div>
+
+          <div class="mode-badge-pill parent-pill">
+            <span class="mode-dot"></span>
+            <span>Parent Mode</span>
+          </div>
+
+          <!-- Navigation Links -->
+          <nav class="sidebar-menu">
+            <button class="nav-btn nav-item active" data-tab="overview">
+              <span class="menu-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              </span>
+              <span>Dashboard</span>
+            </button>
+            <button class="nav-btn nav-item" data-tab="captures">
+              <span class="menu-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </span>
+              <span>Child Progress &amp; Captures</span>
+              <span id="captures-count-badge" class="nav-badge hidden">0</span>
+            </button>
+            <button class="nav-btn nav-item" data-tab="alerts">
+              <span class="menu-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </span>
+              <span>Safety</span>
+              <span id="alert-count-badge" class="nav-badge alert hidden">0</span>
+            </button>
+            <button class="nav-btn nav-item" data-tab="reports">
+              <span class="menu-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              </span>
+              <span>Reports</span>
+            </button>
+            <button class="nav-btn nav-item" data-tab="feed">
+              <span class="menu-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </span>
+              <span>Live Feed</span>
+            </button>
+            <button class="nav-btn nav-item" data-tab="devices">
+              <span class="menu-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              </span>
+              <span>Devices &amp; Pairing</span>
+            </button>
+          </nav>
+        </div>
+
+        <!-- Bottom User Card -->
+        <div class="sidebar-bottom">
+          <div class="user-card">
+            <div class="user-avatar">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div class="user-details">
+              <span id="user-display-name" class="user-name">Parent</span>
+              <span class="user-sub">Parent Account</span>
+            </div>
+            <button id="logout-btn" class="btn-sidebar-logout" title="Sign Out">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Dashboard Content Area (Clean Light Grey #F4F7FB) -->
+      <main class="dashboard-main">
+
+        <!-- Top Navigation Header Bar -->
+        <header class="main-header">
+          <div class="header-greeting">
+            <h1 id="parent-greeting">Good day, Parent</h1>
+            <p id="parent-subgreeting">Here's how your child is doing today.</p>
+          </div>
+
+          <div class="header-actions">
+            <!-- Executive Tamper Guard & Security Status Pill -->
+            <div id="tamper-guard-pill" class="security-status-pill locked" onclick="handleSecurityPillClick()" title="Parent Security Shield - Click to Authorize or Lock">
+              <span class="shield-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+              </span>
+              <span id="tamper-guard-label" class="shield-text">Controls: Locked</span>
+              <span id="tamper-guard-timer" class="shield-timer hidden">05:00</span>
+            </div>
+
+            <!-- Connection Indicator -->
+            <div id="connection-status" class="status-pill online">
+              <span class="dot"></span>
+              <span class="text">Live Connected</span>
+            </div>
+
+            <!-- Bell Icon -->
+            <button class="icon-btn" onclick="document.querySelector('[data-tab=\'alerts\']').click()" title="Safety Alerts">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <span class="notification-indicator"></span>
+            </button>
+
+            <!-- Student Profile Badge & Dropdown -->
+            <div class="student-select-badge" onclick="toggleStudentDropdown(event)" style="cursor: pointer; position: relative;">
+              <div class="student-avatar-small">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <span id="header-student-name">Child Devices ▾</span>
+              <div id="student-dropdown" class="student-dropdown-menu hidden">
+                <div class="dropdown-item" onclick="document.querySelector('[data-tab=\'devices\']').click(); document.getElementById('generate-code-btn').click();">
+                  <span>+ Link Child Device</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- ══════════════ TAB 1: OVERVIEW ══════════════ -->
+        <div id="tab-overview" class="tab-pane active">
+
+          <!-- 4 Stat Metric Cards (Row 1) -->
+          <div class="stats-cards-grid">
+            <!-- Card 1: Study Time -->
+            <div class="stat-box-card">
+              <div class="stat-top">
+                <div class="stat-icon-circle green">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <span id="stat-study-trend" class="stat-trend text-green">Today</span>
+              </div>
+              <span class="stat-label">Study Time</span>
+              <div id="stat-study-time" class="stat-value">--</div>
+            </div>
+
+            <!-- Card 2: Devices Online -->
+            <div class="stat-box-card">
+              <div class="stat-top">
+                <div class="stat-icon-circle blue">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                </div>
+                <span id="stat-online-count" class="stat-trend text-blue">-- Online</span>
+              </div>
+              <span class="stat-label">Child Devices</span>
+              <div id="stat-device-count" class="stat-value">--</div>
+            </div>
+
+            <!-- Card 3: Focus Score -->
+            <div class="stat-box-card">
+              <div class="stat-top">
+                <div class="stat-icon-circle purple">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                </div>
+                <span class="stat-trend text-purple">Avg. all sessions</span>
+              </div>
+              <span class="stat-label">Focus Score</span>
+              <div id="stat-avg-score" class="stat-value">--</div>
+            </div>
+
+            <!-- Card 4: Online Safety -->
+            <div class="stat-box-card">
+              <div class="stat-top">
+                <div class="stat-icon-circle emerald">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <span class="stat-trend text-green">Live monitoring</span>
+              </div>
+              <span class="stat-label">Online Safety</span>
+              <div id="stat-safety-status" class="stat-value text-green">--</div>
+            </div>
+          </div>
+
+
+          <!-- Active Study Session Live Hero Banner (When child is in active session) -->
+          <div id="live-task-hero" class="live-hero-card mb-20 hidden">
+            <div class="live-hero-left">
+              <div class="hero-live-pill">
+                <span class="live-pulse-dot"></span>
+                <span>LIVE STUDY SESSION</span>
+              </div>
+              <h3 id="hero-task-title" class="hero-task-text">Active Study Session</h3>
+              <div class="hero-details-row">
+                <span><strong>Student:</strong> <span id="hero-student-name">Student</span></span>
+                <span><strong>App:</strong> <span id="hero-current-app" class="text-blue">Active App</span></span>
+                <span id="hero-relevance-pill" class="pill pill-green">MONITORING ACTIVE</span>
+              </div>
+              <div id="hero-session-time" class="hero-time-sub">Session In Progress</div>
+            </div>
+
+            <div id="hero-ss-box" class="live-hero-right">
+              <div class="hero-ss-frame">
+                <img id="hero-ss-img" src="" alt="Screen Snapshot" class="hero-ss-preview">
+                <button id="hero-ss-enlarge-btn" class="btn-enlarge-float">🔍 Full Screen</button>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span id="hero-ss-time" class="hero-ss-timestamp">Latest 2m Capture</span>
+                <button id="hero-ss-refresh-btn" class="btn-outline-small" style="padding: 2px 7px; font-size: 10px; cursor: pointer;" onclick="fetchCaptures(); fetchActiveSession();" title="Refresh Screenshot">↻ Refresh</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="live-task-empty" class="panel empty-hero mb-20">
+            <div class="empty-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <h4>No Active Study Session Right Now</h4>
+            <p>Your child is currently idle or not studying. When they start a session on their laptop, live context and 2-minute screen monitoring will display automatically.</p>
+          </div>
+
+          <!-- Assigned Tasks & Child Requests Section -->
+          <div class="white-card mb-20">
+            <div class="card-header-row">
+              <div>
+                <h3>Assigned Study Tasks & Child Requests</h3>
+                <span class="subtext">Assign structured tasks to your child or review tasks proposed by your child</span>
+              </div>
+              <button class="btn-gradient-purple" onclick="openAssignTaskModal()">+ Assign Task to Child</button>
+            </div>
+
+            <div id="parent-tasks-container" class="tasks-display-list">
+              <div class="empty-state">Loading assigned study tasks...</div>
+            </div>
+          </div>
+
+          <!-- Middle Row: Learning Progress + Recent Activity (Row 2) -->
+          <div class="grid-2-col mb-20">
+
+            <!-- Card: Learning Progress -->
+            <div class="white-card">
+              <div class="card-header-row">
+                <h3>Learning Progress</h3>
+                <button class="card-action-link" onclick="document.querySelector('[data-tab=\'reports\']').click()">View Reports ▾</button>
+              </div>
+
+              <div id="learning-progress-container">
+                <!-- Filled dynamically from session reports by updateLearningProgress() -->
+                <div class="empty-state">Loading progress...</div>
+              </div>
+            </div>
+
+            <!-- Card: Recent Activity (Live Feed) -->
+            <div class="white-card">
+              <div class="card-header-row">
+                <div>
+                  <h3>Recent Activity</h3>
+                  <span class="subtext">Live feed of child's desktop & apps</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center">
+                  <span id="feed-status" class="feed-status-pill offline">● Waiting</span>
+                  <button class="card-action-link" onclick="clearFeed()">Clear</button>
+                </div>
+              </div>
+
+              <!-- Live feed container — populated dynamically by app.js -->
+              <div id="live-feed-list" class="recent-activities-list">
+                <div class="feed-empty-state">
+                  <span style="font-size:28px">📡</span>
+                  <p>Waiting for live activity... Start a study session on the child's device to see the feed.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Row: Parental Resources + Safety Insights (Row 3) -->
+          <div class="grid-2-col">
+
+            <!-- Card: Parental Resources -->
+            <div class="white-card resources-card">
+              <div class="resource-content">
+                <h3>Parental Resources</h3>
+                <p>Tips, guides and tools to support your child's digital productivity and safe habits.</p>
+                <button class="btn-gradient-purple" onclick="openResourcesModal()">
+                  <span>Explore Resources</span>
+                  <span>→</span>
+                </button>
+              </div>
+              <div class="resource-img-wrap">
+                <img src="./assets/books_resources.svg" alt="Resources" class="resource-art">
+              </div>
+            </div>
+
+            <!-- Card: Safety Insights & Live Screen Context -->
+            <div class="white-card safety-insights-card">
+              <div class="safety-content">
+                <div class="safety-pill-row">
+                  <span class="shield-icon">🛡️</span>
+                  <h3>Safety Insights</h3>
+                </div>
+                <p>Your child's online activity is verified safe and protected under parental policy.</p>
+                <div style="display:flex;gap:10px;margin-top:12px;">
+                  <button class="btn-gradient-blue" onclick="document.querySelector('[data-tab=\'captures\']').click()">
+                    <span>View 2m Captures</span>
+                    <span>→</span>
+                  </button>
+                  <button class="btn-outline-small" onclick="document.querySelector('[data-tab=\'devices\']').click()">
+                    <span>Pair Device</span>
+                  </button>
+                </div>
+              </div>
+              <div class="safety-img-wrap">
+                <img src="./assets/safety_family.png" alt="Safety Family" class="safety-art">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════ TAB 2: 2-MIN CAPTURES & GALLERY ══════════════ -->
+        <div id="tab-captures" class="tab-pane hidden">
+          <div class="white-card mb-20">
+            <div class="card-header-row">
+              <div>
+                <h2>2-Minute Automated Screen Captures</h2>
+                <p class="subtext">Visual context snapshots recorded automatically every 2 minutes and on significant transitions.</p>
+              </div>
+              <button id="refresh-captures-btn" class="btn-outline-small">↻ Refresh Gallery</button>
+            </div>
+          </div>
+
+          <div id="captures-gallery-grid" class="gallery-grid">
+            <!-- Rendered by app.js -->
+          </div>
+        </div>
+
+        <!-- ══════════════ TAB 3: DEVICES & PAIRING ══════════════ -->
+        <div id="tab-devices" class="tab-pane hidden">
+          <div class="white-card mb-20">
+            <div class="card-header-row">
+              <div>
+                <h2>Supervised Child Devices</h2>
+                <p class="subtext">Manage paired computers, heartbeat status, and supervised protection switches.</p>
+              </div>
+              <button id="generate-code-btn" class="btn-gradient-purple">+ Generate Pairing Code</button>
+            </div>
+
+            <!-- Pairing Modal -->
+            <div id="code-display-card" class="pairing-modal-box hidden">
+              <h4>One-Time Child Pairing Code</h4>
+              <p class="subtext">Enter this code in the student desktop application to link the device:</p>
+              <div class="code-badge-display">
+                <span id="pairing-code-text">------</span>
+              </div>
+              <div id="code-timer" class="code-countdown-text">Expires in 10:00</div>
+              <div style="display:flex;justify-content:center;gap:10px;margin-top:12px;">
+                <button id="copy-code-btn" type="button" class="btn-outline-small" onclick="copyPairingCode()">Copy Code</button>
+                <button id="close-code-btn" class="btn-outline-small">Done</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="devices-list" class="devices-grid">
+            <!-- Rendered by app.js -->
+          </div>
+        </div>
+
+        <!-- ══════════════ TAB 4: SAFETY ALERTS ══════════════ -->
+        <div id="tab-alerts" class="tab-pane hidden">
+          <div class="white-card mb-20">
+            <h2>Safety & Risk Alerts</h2>
+            <p class="subtext">Real-time alerts triggered by potentially harmful desktop activity and policy flags.</p>
+          </div>
+
+          <div id="full-alerts-list" class="alerts-feed">
+            <!-- Rendered by app.js -->
+          </div>
+        </div>
+
+        <!-- ══════════════ TAB 5: DETAILED REPORTS ══════════════ -->
+        <div id="tab-reports" class="tab-pane hidden">
+          <div class="white-card mb-20">
+            <h2>Study Reports & Session Timelines</h2>
+            <p class="subtext">Select any completed study session to reconstruct its timeline and AI insights.</p>
+          </div>
+
+          <div class="reports-layout">
+            <div class="white-card reports-sidebar">
+              <h4>Completed Sessions</h4>
+              <div id="reports-sessions-list" class="session-selector-list"></div>
+            </div>
+
+            <div class="white-card reports-detail-panel">
+              <div id="report-empty-prompt" class="empty-state">
+                Select a study session from the left to view the detailed focus breakdown and timeline.
+              </div>
+
+              <div id="report-content" class="hidden">
+                <div class="report-header-card">
+                  <div>
+                    <h2 id="rep-detail-task">Complete Java binary tree traversal</h2>
+                    <span id="rep-detail-student" class="subtext">Alex Jenkins • Surface Laptop</span>
+                  </div>
+                  <div class="score-badge-circle">
+                    <span id="rep-detail-score" class="score-num">95</span>
+                    <span class="score-txt">FOCUS SCORE</span>
+                  </div>
+                </div>
+
+                <div class="metrics-row mb-20">
+                  <div class="metric-box">
+                    <span class="m-label">Session Duration</span>
+                    <span id="m-duration" class="m-val">45 mins</span>
+                  </div>
+                  <div class="metric-box">
+                    <span class="m-label">Productive Time</span>
+                    <span id="m-productive" class="m-val text-green">40 mins</span>
+                  </div>
+                  <div class="metric-box">
+                    <span class="m-label">Distractions</span>
+                    <span id="m-distraction" class="m-val text-amber">3 mins</span>
+                  </div>
+                  <div class="metric-box">
+                    <span class="m-label">Idle Time</span>
+                    <span id="m-idle" class="m-val text-gray">2 mins</span>
+                  </div>
+                  <div class="metric-box">
+                    <span class="m-label">App Switches</span>
+                    <span id="m-switches" class="m-val">8</span>
+                  </div>
+                </div>
+
+                <div class="panel mb-20">
+                  <h4>AI Coach Evaluation & Recommendations</h4>
+                  <p id="rep-detail-summary" class="summary-body"></p>
+                  <ul id="rep-detail-recommendations" class="recs-list"></ul>
+                </div>
+
+                <!-- Session Captures Mini Gallery -->
+                <div class="panel mb-20">
+                  <h4>Session 2-Minute Captures</h4>
+                  <div id="session-captures-gallery" class="gallery-grid"></div>
+                </div>
+
+                <div class="panel">
+                  <h4>Chronological Activity Timeline</h4>
+                  <div id="rep-detail-timeline" class="timeline-container"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hidden containers needed for legacy JS references -->
+        <div id="stat-captures-count" style="display:none">0</div>
+        <div id="overview-alerts-list" style="display:none"></div>
+        <div id="overview-sessions-list" style="display:none"></div>
+        <button id="quick-pair-btn" style="display:none"></button>
+        <div id="user-profile" style="display:none"></div>
+
+      </main>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         FULLSCREEN SCREENSHOT LIGHTBOX MODAL
+         ══════════════════════════════════════════════════════════ -->
+    <div id="lightbox-modal" class="lightbox-modal hidden">
+      <div class="lightbox-container">
+        <button id="lightbox-close-btn" class="lightbox-close" title="Close">&times;</button>
+        <div class="lightbox-img-wrap">
+          <img id="lightbox-img" src="" alt="Screen Context Full View">
+        </div>
+        <div class="lightbox-meta">
+          <h4 id="lightbox-task-title">Task Context</h4>
+          <p id="lightbox-details">Active Application: VS Code • Captured at 14:10 PM</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         PARENTAL RESOURCES & DIGITAL WELLNESS MODAL
+         ══════════════════════════════════════════════════════════ -->
+    <div id="resources-modal" class="lightbox-modal hidden">
+      <div class="resources-modal-box">
+        <div class="resources-modal-header">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="resource-icon-badge">📚</div>
+            <div>
+              <h3>Parental Guidance & Digital Wellness Hub</h3>
+              <p class="subtext">Expert-backed strategies for raising focused, digitally healthy learners</p>
+            </div>
+          </div>
+          <button class="lightbox-close" onclick="closeResourcesModal()" title="Close">&times;</button>
+        </div>
+        <div class="resources-grid-cards">
+          <div class="resource-item-card">
+            <span class="res-badge">WELLNESS</span>
+            <h4>Balancing Screen Time with Physical Activity</h4>
+            <p>Implement the 20-20-20 rule: every 20 minutes, look at an object 20 feet away for 20 seconds. Pair with 45 minutes of outdoor physical activity daily.</p>
+          </div>
+          <div class="resource-item-card">
+            <span class="res-badge">FOCUS</span>
+            <h4>Creating a Distraction-Free Study Zone</h4>
+            <p>Keep the study workspace clutter-free, well-lit, and isolated from smartphones. StudySafe automatically monitors desktop apps to keep students in flow.</p>
+          </div>
+          <div class="resource-item-card">
+            <span class="res-badge">SAFETY</span>
+            <h4>Age-Appropriate Online Safety Frameworks</h4>
+            <p>Teach proactive digital hygiene: never share personal identifiers, avoid unverified downloads, and immediately report uncomfortable online prompts.</p>
+          </div>
+          <div class="resource-item-card">
+            <span class="res-badge">MOTIVATION</span>
+            <h4>Positive Reinforcement & Streak Milestones</h4>
+            <p>Celebrate steady study habits over test scores. Consistent streaks build intrinsic discipline and self-regulation for future academic excellence.</p>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:20px;">
+          <button class="btn-gradient-purple" onclick="closeResourcesModal()">Close Resource Hub</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Assign Task Modal -->
+    <div id="assign-task-modal" class="modal-overlay hidden">
+      <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+          <div>
+            <h3>Assign Study Task to Child</h3>
+            <span class="subtext">This task will appear instantly on your child's desktop</span>
+          </div>
+          <button class="lightbox-close" onclick="closeAssignTaskModal()">&times;</button>
+        </div>
+        <form id="assign-task-form" onsubmit="handleAssignTask(event)">
+          <div class="form-group mb-16">
+            <label>Task Title *</label>
+            <input type="text" id="assign-task-title" placeholder="e.g. Complete Chemistry Lab Report" required>
+          </div>
+          <div class="form-group mb-16">
+            <label>Subject</label>
+            <select id="assign-task-subject" class="custom-select" style="width:100%;padding:10px;border-radius:8px;border:1px solid #CBD5E1;background:#fff;">
+              <option value="Mathematics">Mathematics</option>
+              <option value="Science">Science</option>
+              <option value="English">English</option>
+              <option value="Computer Science">Computer Science</option>
+              <option value="History">History</option>
+              <option value="General">General Study</option>
+            </select>
+          </div>
+          <div class="form-group mb-16">
+            <label>Instructions / Guidelines (Optional)</label>
+            <textarea id="assign-task-desc" rows="3" placeholder="Specify pages, problems, or objectives..." style="width:100%;padding:10px;border-radius:8px;border:1px solid #CBD5E1;box-sizing:border-box;"></textarea>
+          </div>
+          <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px;">
+            <button type="button" class="btn-outline-small" onclick="closeAssignTaskModal()">Cancel</button>
+            <button type="submit" class="btn-gradient-purple">Assign Task Now →</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         EXECUTIVE PARENT SECURITY & ANTI-TAMPER SHIELD MODAL
+         ══════════════════════════════════════════════════════════ -->
+    <div id="parent-security-modal" class="security-modal-overlay hidden">
+      <div class="security-modal-container">
+        <div class="security-modal-header">
+          <div class="security-shield-badge">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <path d="M12 8v4"/>
+              <path d="M12 16h.01"/>
+            </svg>
+          </div>
+          <div class="security-header-titles">
+            <h3 id="security-modal-title">Parent Authorization Required</h3>
+            <p id="security-modal-subtitle">Bank-grade anti-tamper security. Protects supervision settings against unauthorized child access.</p>
+          </div>
+          <button class="security-modal-close" onclick="closeSecurityPinModal()" title="Dismiss">&times;</button>
+        </div>
+
+        <!-- Security Tabs: Authorize vs Manage PIN -->
+        <div class="security-modal-tabs">
+          <button type="button" id="tab-sec-verify" class="sec-tab-btn active" onclick="switchSecurityTab('VERIFY')">Authorize Controls</button>
+          <button type="button" id="tab-sec-manage" class="sec-tab-btn" onclick="switchSecurityTab('MANAGE')">Manage Master PIN</button>
+        </div>
+
+        <!-- Context Action Reason (e.g. "Authorizing Supervised Protection on Child Device") -->
+        <div id="security-action-reason" class="security-context-banner hidden">
+          <span class="context-dot"></span>
+          <span id="security-context-text">Action: Toggle Supervised Protection</span>
+        </div>
+
+        <!-- TAB 1: PIN ENTRY VIEW -->
+        <div id="sec-pane-verify" class="sec-tab-pane active">
+          <div class="pin-entry-section">
+            <label class="pin-entry-label">Enter 4-Digit Security PIN</label>
+            
+            <!-- 4 Dot Visual Indicators -->
+            <div id="pin-dots-display" class="pin-dots-row">
+              <span class="pin-dot" data-index="0"></span>
+              <span class="pin-dot" data-index="1"></span>
+              <span class="pin-dot" data-index="2"></span>
+              <span class="pin-dot" data-index="3"></span>
+            </div>
+
+            <!-- Hidden Accessible Input Field -->
+            <input type="password" id="pin-hidden-input" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="off" class="pin-hidden-field" placeholder="••••" />
+
+            <!-- Inline Error / Tamper Warning Feedback -->
+            <div id="pin-error-feedback" class="pin-feedback-msg hidden"></div>
+
+            <!-- Tactical Numpad for Tablets & Touch Screens -->
+            <div class="security-numpad">
+              <button type="button" class="numpad-key" data-val="1">1</button>
+              <button type="button" class="numpad-key" data-val="2">2</button>
+              <button type="button" class="numpad-key" data-val="3">3</button>
+              <button type="button" class="numpad-key" data-val="4">4</button>
+              <button type="button" class="numpad-key" data-val="5">5</button>
+              <button type="button" class="numpad-key" data-val="6">6</button>
+              <button type="button" class="numpad-key" data-val="7">7</button>
+              <button type="button" class="numpad-key" data-val="8">8</button>
+              <button type="button" class="numpad-key" data-val="9">9</button>
+              <button type="button" class="numpad-key action-clear" onclick="clearPinInput()">Clear</button>
+              <button type="button" class="numpad-key" data-val="0">0</button>
+              <button type="button" class="numpad-key action-backspace" onclick="backspacePinInput()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+              </button>
+            </div>
+
+            <!-- Tamper Shield Info & Demo Shortcut -->
+            <div class="security-footer-meta">
+              <div class="anti-tamper-pill">
+                <span class="meta-icon">🛡️</span>
+                <span>5 failed attempts trigger 15-min anti-tamper lockout + instant n8n alert</span>
+              </div>
+              <button type="button" class="btn-demo-shortcut" onclick="useDemoPin()">Quick Demo Fill (1234)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: MANAGE / SET PIN VIEW -->
+        <div id="sec-pane-manage" class="sec-tab-pane hidden">
+          <form id="form-manage-pin" class="security-manage-form" onsubmit="handleManagePinSubmit(event)">
+            <div id="group-current-pin" class="form-group mb-12">
+              <label>Current Master PIN</label>
+              <input type="password" id="manage-current-pin" maxlength="6" inputmode="numeric" placeholder="Enter current PIN (default: 1234)" class="sec-input-styled" />
+            </div>
+            <div class="form-group mb-12">
+              <label>New Master Security PIN (4-6 Digits)</label>
+              <input type="password" id="manage-new-pin" maxlength="6" inputmode="numeric" placeholder="Enter new 4-digit PIN" required class="sec-input-styled" />
+            </div>
+            <div class="form-group mb-16">
+              <label>Confirm New Master PIN</label>
+              <input type="password" id="manage-confirm-pin" maxlength="6" inputmode="numeric" placeholder="Confirm new 4-digit PIN" required class="sec-input-styled" />
+            </div>
+            <div id="manage-pin-feedback" class="pin-feedback-msg hidden"></div>
+            <div class="security-manage-actions">
+              <button type="button" class="btn-outline-small" onclick="switchSecurityTab('VERIFY')">Back to Unlock</button>
+              <button type="submit" class="btn-security-primary" id="btn-save-new-pin">Save Master Security PIN</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Security Tamper Alert Toast -->
+    <div id="security-toast-alert" class="security-toast-container hidden">
+      <div class="toast-icon-wrap">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <div class="toast-body">
+        <h5 id="toast-title">Security Shield Alert</h5>
+        <p id="toast-message">Unauthorized attempt detected.</p>
+      </div>
+      <button class="toast-dismiss" onclick="dismissSecurityToast()">&times;</button>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    function togglePasswordVisibility(fieldId, btn) {
+      const field = document.getElementById(fieldId);
+      if (field.type === 'password') {
+        field.type = 'text';
+        btn.innerText = '🙈';
+      } else {
+        field.type = 'password';
+        btn.innerText = '👁️';
+      }
+    }
+  </script>
+</body>
+</html>

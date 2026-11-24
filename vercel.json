@@ -1,0 +1,52 @@
+{
+  "version": 2,
+  "buildCommand": "npm install --workspaces",
+  "installCommand": "npm install",
+  "framework": null,
+  "builds": [
+    {
+      "src": "services/api/src/server.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "apps/**",
+          "packages/**",
+          "database/**",
+          "services/**"
+        ]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "services/api/src/server.js"
+    },
+    {
+      "src": "/health",
+      "dest": "services/api/src/server.js"
+    },
+    {
+      "src": "/socket.io/(.*)",
+      "dest": "services/api/src/server.js"
+    },
+    {
+      "src": "/parent/(.*)",
+      "dest": "services/api/src/server.js"
+    },
+    {
+      "src": "/student/(.*)",
+      "dest": "services/api/src/server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "services/api/src/server.js"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "AI_PROVIDER": "mock",
+    "SEED_DEMO_DATA": "true",
+    "PGLITE_DATA_DIR": "/tmp/.pglite-data"
+  }
+}

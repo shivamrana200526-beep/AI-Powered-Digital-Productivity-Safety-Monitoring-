@@ -1,0 +1,11 @@
+{
+  "name": "@aipd/validation",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "private": true,
+  "dependencies": {
+    "@aipd/shared-types": "*",
+    "zod": "^3.23.8"
+  }
+}

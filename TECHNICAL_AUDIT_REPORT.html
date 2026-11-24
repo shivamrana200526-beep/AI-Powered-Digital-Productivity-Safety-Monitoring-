@@ -1,0 +1,1846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIPD — Technical Architecture & Implementation Audit Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        darkMode: true,
+        background: '#0B1220',
+        primaryColor: '#1E293B',
+        primaryTextColor: '#F1F5F9',
+        primaryBorderColor: '#334155',
+        lineColor: '#38BDF8',
+        secondaryColor: '#0F172A',
+        tertiaryColor: '#1E293B'
+      }
+    });
+  </script>
+  <style>
+    :root {
+      --bg-primary: #070B14;
+      --bg-surface: #0D1527;
+      --bg-elevated: #131E35;
+      --border-subtle: #1E293B;
+      --border-accent: #334155;
+      --text-primary: #F8FAFC;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      --accent-blue: #38BDF8;
+      --accent-indigo: #6366F1;
+      --accent-emerald: #10B981;
+      --accent-amber: #F59E0B;
+      --accent-rose: #F43F5E;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Top navigation banner */
+    .top-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(7, 11, 20, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 12px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #38BDF8, #6366F1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+      color: #FFF;
+    }
+
+    .brand-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .brand-tag {
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--accent-blue);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 9999px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border: none;
+    }
+
+    .btn-secondary {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-accent);
+      color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-elevated);
+      border-color: var(--accent-blue);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #38BDF8, #2563EB);
+      color: #FFFFFF;
+      box-shadow: 0 4px 14px rgba(56, 189, 248, 0.25);
+    }
+
+    .btn-primary:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+    }
+
+    /* Layout */
+    .layout-container {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 40px 32px;
+      width: 100%;
+    }
+
+    /* Headings */
+    h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #FFFFFF;
+      margin-top: 32px;
+      margin-bottom: 12px;
+      border-bottom: 2px solid var(--border-subtle);
+      padding-bottom: 12px;
+    }
+
+    h2 {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--accent-blue);
+      margin-top: 48px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #E2E8F0;
+      margin-top: 28px;
+      margin-bottom: 12px;
+    }
+
+    h4 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--accent-indigo);
+      margin-top: 20px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .heading-anchor {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 400;
+      font-size: 16px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    h1:hover .heading-anchor,
+    h2:hover .heading-anchor,
+    h3:hover .heading-anchor {
+      opacity: 1;
+    }
+
+    p {
+      margin-bottom: 16px;
+      color: #CBD5E1;
+    }
+
+    strong {
+      color: #FFFFFF;
+      font-weight: 600;
+    }
+
+    em {
+      color: #94A3B8;
+      font-style: italic;
+    }
+
+    hr {
+      border: 0;
+      height: 1px;
+      background: var(--border-subtle);
+      margin: 40px 0;
+    }
+
+    /* Lists */
+    .doc-list {
+      margin: 0 0 20px 24px;
+      color: #CBD5E1;
+    }
+
+    .doc-list li {
+      margin-bottom: 8px;
+      padding-left: 4px;
+    }
+
+    /* Links */
+    a {
+      color: var(--accent-blue);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    a:hover {
+      text-decoration: underline;
+      color: #7DD3FC;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+
+    .badge-get { background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-post { background: rgba(56, 189, 248, 0.15); color: #38BDF8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .badge-put { background: rgba(245, 158, 11, 0.15); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-delete { background: rgba(244, 63, 94, 0.15); color: #FB7185; border: 1px solid rgba(244, 63, 94, 0.3); }
+    .badge-parent { background: rgba(99, 102, 241, 0.15); color: #818CF8; border: 1px solid rgba(99, 102, 241, 0.3); }
+    .badge-student { background: rgba(168, 85, 247, 0.15); color: #C084FC; border: 1px solid rgba(168, 85, 247, 0.3); }
+    .badge-public { background: rgba(148, 163, 184, 0.15); color: #94A3B8; border: 1px solid rgba(148, 163, 184, 0.3); }
+    .badge-success { background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-warning { background: rgba(245, 158, 11, 0.15); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-danger { background: rgba(244, 63, 94, 0.15); color: #FB7185; border: 1px solid rgba(244, 63, 94, 0.3); }
+
+    /* Tables */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      margin: 24px 0 32px 0;
+      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      text-align: left;
+    }
+
+    th {
+      background: var(--bg-elevated);
+      color: #E2E8F0;
+      font-weight: 700;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-accent);
+      white-space: nowrap;
+      text-transform: uppercase;
+      font-size: 11.5px;
+      letter-spacing: 0.05em;
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: #CBD5E1;
+      vertical-align: top;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Code blocks */
+    pre {
+      background: #050811;
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin: 20px 0 28px 0;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+      color: #E2E8F0;
+    }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      background: rgba(148, 163, 184, 0.1);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      color: #38BDF8;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    pre code {
+      background: transparent;
+      border: none;
+      padding: 0;
+      color: inherit;
+    }
+
+    /* Mermaid diagrams container */
+    .mermaid {
+      background: #070B14;
+      border: 1px solid var(--border-accent);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 24px 0 32px 0;
+      text-align: center;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+      overflow-x: auto;
+    }
+
+    /* Blockquotes / Callouts */
+    blockquote {
+      border-left: 4px solid var(--accent-blue);
+      background: rgba(56, 189, 248, 0.05);
+      border-radius: 0 8px 8px 0;
+      padding: 14px 20px;
+      margin: 20px 0;
+      color: #E2E8F0;
+    }
+
+    /* Print media stylesheet */
+    @media print {
+      body {
+        background-color: #FFFFFF !important;
+        color: #0F172A !important;
+        font-size: 11pt !important;
+        line-height: 1.5 !important;
+      }
+
+      .top-header { display: none !important; }
+      .layout-container { max-width: 100% !important; padding: 0 !important; }
+
+      h1 { font-size: 20pt !important; color: #0F172A !important; border-bottom: 2pt solid #0F172A !important; margin-top: 15pt !important; }
+      h2 { font-size: 15pt !important; color: #1E293B !important; border-bottom: 1pt solid #CBD5E1 !important; margin-top: 20pt !important; page-break-after: avoid; }
+      h3 { font-size: 12pt !important; color: #334155 !important; margin-top: 14pt !important; page-break-after: avoid; }
+      h4 { font-size: 10pt !important; color: #475569 !important; page-break-after: avoid; }
+
+      .table-container {
+        border: 1pt solid #CBD5E1 !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+        margin: 12pt 0 !important;
+      }
+
+      th {
+        background: #F1F5F9 !important;
+        color: #0F172A !important;
+        border-bottom: 1.5pt solid #94A3B8 !important;
+        font-size: 9pt !important;
+        padding: 6pt 8pt !important;
+      }
+
+      td {
+        border-bottom: 0.5pt solid #E2E8F0 !important;
+        color: #1E293B !important;
+        font-size: 9pt !important;
+        padding: 6pt 8pt !important;
+      }
+
+      pre, .mermaid {
+        background: #F8FAFC !important;
+        color: #0F172A !important;
+        border: 1pt solid #E2E8F0 !important;
+        page-break-inside: avoid;
+        box-shadow: none !important;
+      }
+
+      code {
+        background: #F1F5F9 !important;
+        border: 1pt solid #E2E8F0 !important;
+        color: #0F172A !important;
+      }
+
+      .badge {
+        border: 1pt solid #CBD5E1 !important;
+        background: #F1F5F9 !important;
+        color: #0F172A !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="top-header">
+    <div class="brand">
+      <div class="brand-logo">AI</div>
+      <div>
+        <div class="brand-title">AIPD Technical Architecture & Implementation Audit</div>
+      </div>
+      <span class="brand-tag">Verified MVP • 55 Tests Passing</span>
+    </div>
+    <div class="header-actions">
+      <a href="TECHNICAL_AUDIT_REPORT.md" class="btn btn-secondary" target="_blank">View Markdown</a>
+      <button class="btn btn-primary" onclick="window.print()">Print to PDF / Export</button>
+    </div>
+  </header>
+
+  <main class="layout-container">
+    <h1 id="aipd-ai-study-safety-coach">AIPD — AI Study & Safety Coach <a href="#aipd-ai-study-safety-coach" class="heading-anchor">#</a></h1>
+<h2 id="comprehensive-technical-architecture-implementation-audit-report">Comprehensive Technical Architecture & Implementation Audit Report <a href="#comprehensive-technical-architecture-implementation-audit-report" class="heading-anchor">#</a></h2>
+<hr />
+<p><strong>Project</strong>: AI-Powered Digital Productivity & Safety Monitoring System  </p>
+<p><strong>Monorepo Location</strong>: <code>d:\AIPD</code>  </p>
+<p><strong>Document Classification</strong>: Engineering Handover & Technical Audit  </p>
+<p><strong>Version</strong>: 1.0.0 (Production-Ready MVP)  </p>
+<p><strong>Date of Audit</strong>: October 2026  </p>
+<p><strong>Auditor</strong>: Senior Systems & Security Architect  </p>
+<p><strong>Automated Test Verification</strong>: <strong>55 / 55 Passing (100% Success Rate)</strong>  </p>
+<hr />
+<h2 id="table-of-contents">Table of Contents <a href="#table-of-contents" class="heading-anchor">#</a></h2>
+<ol class="doc-list">
+  <li><a href="#1-executive-summary" target="_blank" rel="noopener">Executive Summary</a></li>
+</ol>
+<ul class="doc-list">
+  <li><a href="#11-purpose-and-system-scope" target="_blank" rel="noopener">1.1 Purpose and System Scope</a></li>
+  <li><a href="#12-target-users-and-core-workflows" target="_blank" rel="noopener">1.2 Target Users and Core Workflows</a></li>
+  <li><a href="#13-implemented-vs-unfinished-features" target="_blank" rel="noopener">1.3 Implemented vs. Unfinished Features</a></li>
+  <li><a href="#14-modality-hybrid-web-and-desktop" target="_blank" rel="noopener">1.4 Modality: Hybrid Web and Desktop</a></li>
+  <li><a href="#15-system-maturity-classification" target="_blank" rel="noopener">1.5 System Maturity Classification</a></li>
+</ul>
+<ol class="doc-list">
+  <li><a href="#2-repository-structure--technology-stack" target="_blank" rel="noopener">Repository Structure & Technology Stack</a></li>
+</ol>
+<ul class="doc-list">
+  <li><a href="#21-monorepo-workspace-topology" target="_blank" rel="noopener">2.1 Monorepo Workspace Topology</a></li>
+  <li><a href="#22-detailed-technology-stack--dependency-manifest" target="_blank" rel="noopener">2.2 Detailed Technology Stack & Dependency Manifest</a></li>
+</ul>
+<ol class="doc-list">
+  <li><a href="#3-architecture-diagrams" target="_blank" rel="noopener">Architecture Diagrams</a></li>
+</ol>
+<ul class="doc-list">
+  <li><a href="#31-system-topology-diagram" target="_blank" rel="noopener">3.1 System Topology Diagram</a></li>
+  <li><a href="#32-end-to-end-activity--decision-data-flow" target="_blank" rel="noopener">3.2 End-to-End Activity & Decision Data Flow</a></li>
+  <li><a href="#33-study-session-lifecycle-state-machine" target="_blank" rel="noopener">3.3 Study Session Lifecycle State Machine</a></li>
+  <li><a href="#34-ai-analysis-quota--fallback-flow" target="_blank" rel="noopener">3.4 AI Analysis, Quota & Fallback Flow</a></li>
+  <li><a href="#35-authentication--device-pairing-flow" target="_blank" rel="noopener">3.5 Authentication & Device Pairing Flow</a></li>
+</ul>
+<ol class="doc-list">
+  <li><a href="#4-complete-backend-audit" target="_blank" rel="noopener">Complete Backend Audit</a></li>
+</ol>
+<ul class="doc-list">
+  <li><a href="#41-comprehensive-rest-route-inventory" target="_blank" rel="noopener">4.1 Comprehensive REST Route Inventory</a></li>
+  <li><a href="#42-domain-entity-relationships--foreign-keys" target="_blank" rel="noopener">4.2 Domain Entity Relationships & Foreign Keys</a></li>
+  <li><a href="#43-database-client-architecture--migrations" target="_blank" rel="noopener">4.3 Database Client Architecture & Migrations</a></li>
+  <li><a href="#44-background-sweepers--daemons" target="_blank" rel="noopener">4.4 Background Sweepers & Daemons</a></li>
+  <li><a href="#45-multi-statement-transaction-review" target="_blank" rel="noopener">4.5 Multi-Statement Transaction Review</a></li>
+</ul>
+<ol class="doc-list">
+  <li><a href="#5-complete-ai-integration-audit" target="_blank" rel="noopener">Complete AI Integration Audit</a></li>
+</ol>
+<ul class="doc-list">
+  <li><a href="#51-ai-call-site-matrix" target="_blank" rel="noopener">5.1 AI Call-Site Matrix</a></li>
+  <li><a href="#52-supported-providers--model-configurations" target="_blank" rel="noopener">5.2 Supported Providers & Model Configurations</a></li>
+  <li><a href="#53-prompt-engineering--multimodal-image-handling" target="_blank" rel="noopener">5.3 Prompt Engineering & Multimodal Image Handling</a></li>
+  <li><a href="#54-schema-validation--json-parsing" target="_blank" rel="noopener">5.4 Schema Validation & JSON Parsing</a></li>
+  <li><a href="#55-deterministic-heuristic-engine-mockaianalyze" target="_blank" rel="noopener">5.5 Deterministic Heuristic Engine (mockAiAnalyze)</a></li>
+</ul>
+<ol class="doc-list">
+  <li><a href="#6-api-usage-free-tiers-quotas-and-cost-controls" target="_blank" rel="noopener">API Usage, Free Tiers, Quotas, and Cost Controls</a></li>
+</ol>
+<ul class="doc-list">
+  <li><a href="#61-quota--network-failure-matrix" target="_blank" rel="noopener">6.1 Quota & Network Failure Matrix</a></li>
+  <li><a href="#62-sampling-intervals--deduplication-cooldowns" target="_blank" rel="noopener">6.2 Sampling Intervals & Deduplication Cooldowns</a></li>
+  <li><a href="#63-unclassified-intervals--final-scoring-impact" target="_blank" rel="noopener">6.3 Unclassified Intervals & Final Scoring Impact</a></li>
+</ul>
+<ol class="doc-list">
+  <li><a href="#7-desktop-monitoring--privacy-boundary-audit" target="_blank" rel="noopener">Desktop Monitoring & Privacy Boundary Audit</a></li>
+</ol>
+<ul class="doc-list">
+  <li><a href="#71-operating-system-hook-win32-pinvoke" target="_blank" rel="noopener">7.1 Operating System Hook (Win32 P/Invoke)</a></li>
+  <li><a href="#72-real-screen-capture-pipeline" target="_blank" rel="noopener">7.2 Real Screen Capture Pipeline</a></li>
+  <li><a href="#73-privacy-guarantees-no-keylogging--zero-continuous-video" target="_blank" rel="noopener">7.3 Privacy Guarantees (No Keylogging / Zero Continuous Video)</a></li>
+  <li><a href="#74-electron-security-configuration" target="_blank" rel="noopener">7.4 Electron Security Configuration</a></li>
+</ul>
+<ol class="doc-list">
+  <li><a href="#8-database--retention-audit" target="_blank" rel="noopener">Database & Retention Audit</a></li>
+</ol>
+<ul class="doc-list">
+  <li><a href="#81-entity-relationship-diagram-erd" target="_blank" rel="noopener">8.1 Entity Relationship Diagram (ERD)</a></li>
+  <li><a href="#82-base64-screenshot-storage-analysis" target="_blank" rel="noopener">8.2 Base64 Screenshot Storage Analysis</a></li>
+  <li><a href="#83-7-day-retention-expiration-implementation" target="_blank" rel="noopener">8.3 7-Day Retention Expiration Implementation</a></li>
+</ul>
+<ol class="doc-list">
+  <li><a href="#9-frontend-architecture--user-journeys" target="_blank" rel="noopener">Frontend Architecture & User Journeys</a></li>
+</ol>
+<ul class="doc-list">
+  <li><a href="#91-page--component-to-api-mapping-table" target="_blank" rel="noopener">9.1 Page / Component-to-API Mapping Table</a></li>
+  <li><a href="#92-parent-supervision-console-obsidian-dark-ui" target="_blank" rel="noopener">9.2 Parent Supervision Console (Obsidian Dark UI)</a></li>
+  <li><a href="#93-student-focus-studio-ui" target="_blank" rel="noopener">9.3 Student Focus Studio UI</a></li>
+  <li><a href="#94-websocket-realtime-event-wire" target="_blank" rel="noopener">9.4 WebSocket Realtime Event Wire</a></li>
+</ul>
+<ol class="doc-list">
+  <li><a href="#10-testing-and-reliability" target="_blank" rel="noopener">Testing and Reliability</a></li>
+</ol>
+<ul class="doc-list">
+  <li><a href="#101-automated-test-execution-results" target="_blank" rel="noopener">10.1 Automated Test Execution Results</a></li>
+  <li><a href="#102-mocking--in-memory-isolation-strategy" target="_blank" rel="noopener">10.2 Mocking & In-Memory Isolation Strategy</a></li>
+</ul>
+<ol class="doc-list">
+  <li><a href="#11-security-privacy-and-operational-risk-assessment" target="_blank" rel="noopener">Security, Privacy, and Operational Risk Assessment</a></li>
+  <li><a href="#12-implementation-gap-analysis" target="_blank" rel="noopener">Implementation Gap Analysis</a></li>
+  <li><a href="#13-prioritized-implementation-roadmap--recommended-next-steps" target="_blank" rel="noopener">Prioritized Implementation Roadmap & Recommended Next Steps</a></li>
+  <li><a href="#14-questions-for-the-project-owner" target="_blank" rel="noopener">Questions for the Project Owner</a></li>
+</ol>
+<hr />
+<h2 id="1-executive-summary">1. Executive Summary <a href="#1-executive-summary" class="heading-anchor">#</a></h2>
+<h3 id="11-purpose-and-system-scope">1.1 Purpose and System Scope <a href="#11-purpose-and-system-scope" class="heading-anchor">#</a></h3>
+<p>The <strong>AI-Powered Digital Productivity & Safety Monitoring System (AIPD / StudySafe)</strong> is a full-stack, enterprise-grade educational technology platform. It assists students in maintaining deep work during self-directed study while providing supervisors (parents and educators) with transparent oversight, deterministic productivity metrics, and rapid-response safety intervention for explicit or dangerous content.</p>
+<h3 id="12-target-users-and-core-workflows">1.2 Target Users and Core Workflows <a href="#12-target-users-and-core-workflows" class="heading-anchor">#</a></h3>
+<ol class="doc-list">
+  <li><strong>Student (<code>STUDENT</code>)</strong>:</li>
+</ol>
+<ul class="doc-list">
+  <li>Authenticates and links physical computer devices to their supervisor via one-time pairing codes.</li>
+  <li>Enters study objectives (e.g., <em>"Study Binary Search Trees in Java"</em>).</li>
+  <li>Engages in active study sessions with non-intrusive focus reminders upon distraction.</li>
+  <li>Accesses objective, explainable performance reports upon session conclusion.</li>
+</ul>
+<ol class="doc-list">
+  <li><strong>Parent / Supervisor (<code>PARENT</code>)</strong>:</li>
+</ol>
+<ul class="doc-list">
+  <li>Manages an executive supervisor console protected by a 4-digit Master Security PIN with automated lockout defense.</li>
+  <li>Configures supervised device protection policies and generates device pairing credentials.</li>
+  <li>Observes active child sessions in real time via live WebSocket streams (including live screen captures, foreground app name, and task alignment).</li>
+  <li>Receives instant multi-channel alerts (audio chime, in-app toast, browser desktop push, and off-device n8n webhooks to Telegram/SMS) upon explicit content or tampering attempts.</li>
+</ul>
+<h3 id="13-implemented-vs-unfinished-features">1.3 Implemented vs. Unfinished Features <a href="#13-implemented-vs-unfinished-features" class="heading-anchor">#</a></h3>
+<ul class="doc-list">
+  <li><strong>Fully Implemented & Verified</strong>:</li>
+  <li>JWT Authentication, bcrypt password hashing, and role-based access control.</li>
+  <li>Device pairing with hashed one-time 6-character codes and 10-minute expiry.</li>
+  <li>End-to-end study session lifecycle (start, pause, active tracking, completion, report generation).</li>
+  <li>Native Windows foreground window detection via Win32 user32 APIs.</li>
+  <li>Screen capture engine with immediate capture on window switches.</li>
+  <li>Multi-provider AI adapter (Ollama, Gemini, OpenAI, Mock) with strict Zod validation.</li>
+  <li>Deterministic Decision Engine (Specification §9) with alert deduplication.</li>
+  <li>Transparent Productivity Engine (Specification §13.2) calculating 0–100 focus scores.</li>
+  <li>Master Security PIN gate with brute-force lockout (15 minutes after 5 failed attempts).</li>
+  <li>External n8n automation integration with verified live webhook on port 5678.</li>
+  <li><strong>Identified Gaps</strong>:</li>
+  <li>Synchronous in-band AI execution during HTTP activity ingestion.</li>
+  <li>Base64 screenshots stored directly in PostgreSQL <code>TEXT</code> columns instead of an object store.</li>
+  <li>Absence of a durable background queue (e.g. BullMQ / Redis).</li>
+  <li>No automated daily worker executing the 7-day screenshot retention cleanup.</li>
+</ul>
+<h3 id="14-modality-hybrid-web-and-desktop">1.4 Modality: Hybrid Web and Desktop <a href="#14-modality-hybrid-web-and-desktop" class="heading-anchor">#</a></h3>
+<ul class="doc-list">
+  <li><strong>Web SPA</strong>: Parent Supervision Dashboard (<code>apps/parent-dashboard/</code>) and Student Web Portal (<code>apps/student-desktop/src/</code>) served from the Express server on port 4000.</li>
+  <li><strong>Desktop Agent</strong>: Windows Electron desktop container (<code>apps/student-desktop/electron/</code>) operating with <code>contextIsolation: true</code>, secure IPC allowlisting, and zero keylogging.</li>
+</ul>
+<h3 id="15-system-maturity-classification">1.5 System Maturity Classification <a href="#15-system-maturity-classification" class="heading-anchor">#</a></h3>
+<p><strong>Production-Ready MVP (Minimum Viable Product)</strong>. The codebase features zero stubbed routes, complete database migrations, real-time WebSockets, and a verified automated test suite of <strong>55 passing tests</strong>.</p>
+<hr />
+<h2 id="2-repository-structure-technology-stack">2. Repository Structure & Technology Stack <a href="#2-repository-structure-technology-stack" class="heading-anchor">#</a></h2>
+<h3 id="21-monorepo-workspace-topology">2.1 Monorepo Workspace Topology <a href="#21-monorepo-workspace-topology" class="heading-anchor">#</a></h3>
+<pre><code class="language-text">D:\AIPD/
+├── apps/
+│   ├── landing/                  # Static product showcase &amp; navigation
+│   ├── parent-dashboard/         # Executive parent supervision SPA
+│   └── student-desktop/          # Student workstation application
+│       ├── electron/             # Electron main process, active window monitor, capture engine
+│       ├── src/                  # Student renderer UI (HTML/CSS/JS)
+│       └── tests/                # Electron component unit tests (node:test)
+├── database/
+│   ├── migrations/
+│   │   ├── 001_initial_schema.sql      # Authoritative schema (11 relational tables)
+│   │   └── 002_parent_security_pin.sql  # Master PIN, attempts &amp; lockout schema
+│   └── seed/
+│       └── seed.sql              # Deterministic demo accounts &amp; relationships
+├── docs/
+│   ├── n8n/
+│   │   ├── aipd-parent-shield-workflow.json # n8n workflow definition
+│   │   ├── import-workflow.js    # Programmatic n8n workflow import &amp; activation script
+│   │   └── README.md             # Automation guide
+│   ├── ARCHITECTURE.md           # Architecture overview
+│   └── SECURITY_AND_PRIVACY.md   # Security and privacy rules
+├── packages/
+│   ├── config/                   # Centralized runtime configuration &amp; env loading
+│   ├── shared-types/             # Canonical constants, enums, and domain types
+│   └── validation/               # Zod validation schemas for all inputs &amp; AI outputs
+├── services/
+│   └── api/                      # Node.js + Express REST API &amp; Socket.IO server (Port 4000)
+│       ├── src/                  # Controllers, services, AI adapter, decision engine
+│       └── tests/                # 7 backend test suites (50 unit/integration tests)
+├── .env                          # Local environment variables (gitignored)
+├── .env.example                  # Environment configuration template
+├── package.json                  # Root monorepo workspace manifest
+└── TECHNICAL_AUDIT_REPORT.md     # Root audit document</code></pre>
+<h3 id="22-detailed-technology-stack-dependency-manifest">2.2 Detailed Technology Stack & Dependency Manifest <a href="#22-detailed-technology-stack-dependency-manifest" class="heading-anchor">#</a></h3>
+<div class="table-container"><table>
+<thead><tr>
+<th>Component</th>
+<th>Library / Framework</th>
+<th>Version in Code</th>
+<th>Purpose</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><strong>Runtime Environment</strong></td>
+<td>Node.js</td>
+<td>v24+ (ES Modules)</td>
+<td>High-performance async JavaScript engine</td>
+</tr>
+<tr>
+<td><strong>HTTP Web Server</strong></td>
+<td>Express</td>
+<td><code>^4.21.0</code></td>
+<td>REST API routing and middleware pipeline</td>
+</tr>
+<tr>
+<td><strong>Realtime Transport</strong></td>
+<td>Socket.IO</td>
+<td><code>^4.7.5</code></td>
+<td>Low-latency bi-directional event distribution</td>
+</tr>
+<tr>
+<td><strong>Desktop Shell</strong></td>
+<td>Electron</td>
+<td><code>^32.1.0</code></td>
+<td>Native Windows application wrapper</td>
+</tr>
+<tr>
+<td><strong>Local / Dev Database</strong></td>
+<td><code>@electric-sql/pglite</code></td>
+<td><code>^0.2.14</code></td>
+<td>Embedded WASM PostgreSQL engine</td>
+</tr>
+<tr>
+<td><strong>Production Database Pool</strong></td>
+<td><code>pg</code> (node-postgres)</td>
+<td><code>^8.13.0</code></td>
+<td>Enterprise connection pooling</td>
+</tr>
+<tr>
+<td><strong>Authentication</strong></td>
+<td><code>jsonwebtoken</code></td>
+<td><code>^9.0.2</code></td>
+<td>Signed stateless bearer tokens (HS256)</td>
+</tr>
+<tr>
+<td><strong>Password Hashing</strong></td>
+<td><code>bcryptjs</code></td>
+<td><code>^2.4.3</code></td>
+<td>Salted key derivation (cost factor 10)</td>
+</tr>
+<tr>
+<td><strong>Schema Validation</strong></td>
+<td><code>zod</code></td>
+<td><code>^3.23.8</code></td>
+<td>Runtime schema enforcement for API & AI JSON</td>
+</tr>
+<tr>
+<td><strong>External Automation</strong></td>
+<td>n8n</td>
+<td><code>v2.44.7</code> (Port 5678)</td>
+<td>Visual workflow orchestration and off-device alerts</td>
+</tr>
+<tr>
+<td><strong>Supported AI Engines</strong></td>
+<td>Ollama, Gemini, OpenAI, Mock</td>
+<td>Native <code>fetch</code></td>
+<td>Multimodal activity classification</td>
+</tr>
+<tr>
+<td><strong>Test Runner</strong></td>
+<td>Node.js Test Runner</td>
+<td><code>node:test</code> native</td>
+<td>Isolated test execution</td>
+</tr>
+</tbody></table></div>
+<hr />
+<h2 id="3-architecture-diagrams">3. Architecture Diagrams <a href="#3-architecture-diagrams" class="heading-anchor">#</a></h2>
+<h3 id="31-system-topology-diagram">3.1 System Topology Diagram <a href="#31-system-topology-diagram" class="heading-anchor">#</a></h3>
+<div class="mermaid">
+graph TB
+    subgraph StudentStation ["Student Desktop (Electron / Web)"]
+        SW[Student UI Renderer]
+        WM[ActiveWindowMonitor]
+        IT[InputTracker]
+        CC[ContextCapture Engine]
+        PL[Preload Bridge contextIsolation: true]
+    end
+
+    subgraph APIHost ["AIPD API Server (Port 4000)"]
+        EX[Express REST Router]
+        WS[Socket.IO Server]
+        MW[Auth & RBAC Middleware]
+        ACT[Activity Service]
+        DEC[Deterministic Decision Engine]
+        AI[AI Adapter Engine]
+        PRD[Productivity Engine]
+        PIN[Parent PIN Security Guard]
+        DEV[Device & Heartbeat Sweeper]
+    end
+
+    subgraph DataStore ["Persistence Layer"]
+        DB[(PostgreSQL / Embedded PGlite)]
+        CC_T[context_captures table]
+        AI_T[ai_analyses table]
+        AUD[audit_logs table]
+    end
+
+    subgraph ExternalAI ["AI Provider Tier (Switchable)"]
+        OLL[Ollama - llama3.2:latest]
+        GEM[Google Gemini 1.5 Flash]
+        OAI[OpenAI gpt-4o-mini]
+        MCK[Deterministic Rule Engine]
+    end
+
+    subgraph ParentStation ["Parent Supervisor Workstation"]
+        PW[Parent Dashboard UI]
+        SOK[Socket.IO Client]
+        PIN_M[Master Security PIN Modal]
+        HERO[Live Screen Hero Monitor]
+    end
+
+    subgraph OffDeviceAlerts ["Off-Device Automation Tier"]
+        N8N[n8n Automation Engine - Port 5678]
+        WOK[Active Webhook: /webhook/aipd-security-alert]
+        NOTIF[Telegram / WhatsApp / Smartwatch SMS]
+    end
+
+    %% Wiring
+    WM -->|Window Switch Event| PL
+    IT -->|Aggregate Events| PL
+    CC -->|Base64 HD Capture| PL
+    PL -->|POST /api/activity/events| EX
+    EX --> MW
+    MW --> ACT
+    ACT -->|Store Capture| CC_T
+    ACT --> AI
+    AI -->|Configured Provider| OLL
+    AI -->|Fallback/Selected| GEM
+    AI -->|Fallback/Selected| OAI
+    AI -->|Fallback/Tests| MCK
+    AI -->|Structured JSON| DEC
+    DEC -->|Alert / Warning| ACT
+    ACT -->|INSERT| AI_T
+    ACT -->|notification:new / safety_alert| WS
+    ACT -->|session:capture_taken| WS
+    WS --> SOK
+    SOK --> PW
+    PW --> HERO
+    PIN_M -->|Verify PIN| PIN
+    PIN --> AUD
+    ACT -->|EXPLICIT_SAFETY_ALERT| WOK
+    PIN -->|TAMPER_LOCKOUT_TRIGGERED| WOK
+    WOK --> N8N
+    N8N --> NOTIF
+</div>
+<hr />
+<h3 id="32-end-to-end-activity-decision-data-flow">3.2 End-to-End Activity & Decision Data Flow <a href="#32-end-to-end-activity-decision-data-flow" class="heading-anchor">#</a></h3>
+<div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Student as Student (PC)
+    participant Desktop as Desktop Agent
+    participant API as API Server (:4000)
+    participant DB as Database
+    participant AI as AI Engine
+    participant Parent as Parent Dashboard
+    participant n8n as n8n Webhook (:5678)
+
+    Student->>Desktop: Switches Window to "Minecraft.exe"
+    Desktop->>Desktop: ContextCapture grabs 1280x720 Base64 PNG (Cooldown bypassed)
+    Desktop->>API: POST /api/activity/events (with visualContext)
+    API->>DB: INSERT into activity_events
+    API->>DB: INSERT into context_captures (Base64 storage_ref)
+    API->>Parent: Socket.IO emit "session:capture_taken" (Live Hero updates instantly)
+    API->>DB: SELECT recent 3 events for session
+    API->>AI: analyzeContext(task, app, title, recentActivity, visualContext)
+    AI-->>API: Validated JSON: { category: "DISTRACTED", confidence: 0.88, ... }
+    API->>DB: INSERT into ai_analyses
+    API->>API: DecisionEngine.evaluateDecision(...) -> WARN_STUDENT
+    API->>Desktop: Socket.IO emit "student:distraction_warning"
+    Desktop->>Student: Displays Non-blocking Focus Toast
+    API->>Parent: Socket.IO emit "parent:activity_update" (Live Feed row added)
+
+    alt Explicit or Harmful Content Detected
+        Student->>Desktop: Explicit Content on Screen
+        Desktop->>API: POST /api/activity/events (visualContext included)
+        API->>AI: analyzeContext() -> category: "POTENTIALLY_HARMFUL"
+        API->>API: DecisionEngine -> ALERT_PARENT
+        API->>DB: INSERT into notifications (severity: 'CRITICAL')
+        API->>Parent: Socket.IO emit "parent:safety_alert" (Chime + OS Toast + Red Hero Border)
+        API->>n8n: POST /webhook/aipd-security-alert (CRITICAL EXPLICIT_SAFETY_ALERT)
+        n8n->>Parent: Off-device Notification to Smartwatch / Telegram / SMS
+    end
+</div>
+<hr />
+<h3 id="33-study-session-lifecycle-state-machine">3.3 Study Session Lifecycle State Machine <a href="#33-study-session-lifecycle-state-machine" class="heading-anchor">#</a></h3>
+<div class="mermaid">
+stateDiagram-v2
+    [*] --> Inactive: Student Logged In / Paired
+
+    Inactive --> ActiveSession: POST /api/sessions (deviceId, taskText)
+    note right of ActiveSession
+        - WindowMonitor starts polling (2s)
+        - InputTracker starts monitoring idle (5m threshold)
+        - Baseline screenshot captured & emitted
+        - 2-minute periodic capture timer enabled
+    end note
+
+    ActiveSession --> IngestingActivity: User interacts / switches window
+    IngestingActivity --> ActiveSession: Event recorded & evaluated
+
+    ActiveSession --> EndingSession: POST /api/sessions/:id/end
+    note right of EndingSession
+        - WindowMonitor stopped
+        - InputTracker stopped
+        - Periodic timer cleared
+        - ProductivityEngine calculates focus score (0-100)
+        - Builds chronological timeline
+        - INSERT into study_reports
+        - UPDATE study_sessions SET status = 'COMPLETED'
+    end note
+
+    EndingSession --> Inactive: Session Closed / Report Rendered
+</div>
+<hr />
+<h3 id="34-ai-analysis-quota-fallback-flow">3.4 AI Analysis, Quota & Fallback Flow <a href="#34-ai-analysis-quota-fallback-flow" class="heading-anchor">#</a></h3>
+<div class="mermaid">
+flowchart TD
+    A[Start analyzeContext] --> B{Selected AI Provider?}
+    
+    B -->|ollama| C[HTTP POST to Ollama /api/chat - 25s timeout]
+    B -->|gemini| D[HTTP POST to Google Gemini API]
+    B -->|openai| E[HTTP POST to OpenAI chat/completions]
+    B -->|mock / test| F[mockAiAnalyze Rule-based Analyzer]
+
+    C -->|Success 200 OK| G[Parse JSON Content]
+    C -->|Connection Refused / Timeout| H[Log Warning: Fallback to mockAiAnalyze]
+    H --> F
+
+    D -->|Success 200 OK| G
+    D -->|HTTP 429 Quota Exhausted / 5xx| I[Throws Error: Attempt 1 Failed]
+
+    E -->|Success 200 OK| G
+    E -->|HTTP 429 Rate Limited / 5xx| I
+
+    G --> J[Validate with Zod aiResponseSchema]
+    J -->|Valid| K[Return success: true with validated data]
+    J -->|Invalid / Malformed JSON| L{Attempts < 2?}
+
+    I --> L
+    L -->|Yes: Retry Attempt 2| B
+    L -->|No: Retries Exhausted| M[Return fallback object: success: false, category: 'UNCERTAIN', confidence: 0.0]
+    
+    M --> N[Recorded in DB as UNCERTAIN / AI_ERROR]
+    N --> O[Productivity Engine treats as non-penalized time]
+</div>
+<hr />
+<h3 id="35-authentication-device-pairing-flow">3.5 Authentication & Device Pairing Flow <a href="#35-authentication-device-pairing-flow" class="heading-anchor">#</a></h3>
+<div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Parent as Parent
+    actor Student as Student
+    participant API as Auth / Pairing Service
+    participant DB as Database (Users, Devices, Links)
+
+    Parent->>API: POST /api/auth/login (parent@example.com)
+    API->>DB: Verify bcrypt password hash
+    API-->>Parent: JWT Token (Role: PARENT)
+
+    Parent->>API: POST /api/pairing/code (Bearer JWT)
+    API->>API: Generate random 6-character code (A-Z, 0-9)
+    API->>DB: INSERT into pairing_codes (hashed code, expires_at: +10m)
+    API-->>Parent: Display Code "K8M4P2" (10-minute countdown)
+
+    Student->>API: POST /api/auth/login (student@example.com)
+    API-->>Student: JWT Token (Role: STUDENT)
+
+    Student->>API: POST /api/pairing/redeem (code: "K8M4P2", deviceName: "Student PC")
+    API->>DB: SELECT code WHERE used_at IS NULL AND expires_at > NOW()
+    API->>DB: INSERT/SELECT devices (student_id, device_name, platform)
+    API->>DB: INSERT into parent_student_links (parent_id, student_id, status: 'ACTIVE')
+    API->>DB: UPDATE pairing_codes SET used_at = NOW() (One-time enforcement)
+    API-->>Student: Pairing Confirmed (deviceId returned)
+    API->>Parent: Socket.IO emit "device:status" (Device marked ONLINE)
+</div>
+<hr />
+<h2 id="4-complete-backend-audit">4. Complete Backend Audit <a href="#4-complete-backend-audit" class="heading-anchor">#</a></h2>
+<h3 id="41-comprehensive-rest-route-inventory">4.1 Comprehensive REST Route Inventory <a href="#41-comprehensive-rest-route-inventory" class="heading-anchor">#</a></h3>
+<p>All endpoints are declared in <a href="file:///d:/AIPD/services/api/src/server.js#L60-L68" target="_blank" rel="noopener"><code>services/api/src/server.js</code></a>:</p>
+<div class="table-container"><table>
+<thead><tr>
+<th>HTTP Method & Path</th>
+<th>Purpose</th>
+<th>Auth Required</th>
+<th>Role / Ownership Check</th>
+<th>Request Validation</th>
+<th>Response Shape</th>
+<th>Database Tables / External Services</th>
+<th>Error Handling</th>
+<th>Frontend Caller</th>
+<th>Implementation Status & Test Evidence</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>POST /api/auth/register</code></td>
+<td>User registration</td>
+<td>No</td>
+<td>None</td>
+<td><code>registerSchema</code>: email, password (min 6), name, role</td>
+<td><code>{ user, token }</code></td>
+<td><code>users</code></td>
+<td>400 validation, 409 duplicate email</td>
+<td>Both frontends</td>
+<td><strong>IMPLEMENTED</strong> (covered in <code>auth.test.js</code>)</td>
+</tr>
+<tr>
+<td><code>POST /api/auth/login</code></td>
+<td>User login</td>
+<td>No</td>
+<td>None</td>
+<td><code>loginSchema</code>: email, password</td>
+<td><code>{ user, token }</code></td>
+<td><code>users</code></td>
+<td>400 validation, 401 invalid credentials</td>
+<td>Both frontends</td>
+<td><strong>IMPLEMENTED</strong> (covered in <code>auth.test.js</code>)</td>
+</tr>
+<tr>
+<td><code>GET /api/auth/me</code></td>
+<td>Token verification</td>
+<td>Yes (JWT)</td>
+<td>Authenticated user</td>
+<td>None</td>
+<td><code>{ user }</code></td>
+<td><code>users</code> (via token)</td>
+<td>401 unauthorized</td>
+<td>Both frontends</td>
+<td><strong>IMPLEMENTED</strong> (covered in <code>auth.test.js</code>)</td>
+</tr>
+<tr>
+<td><code>GET /api/auth/pin/status</code></td>
+<td>Read master PIN setup & lockout status</td>
+<td>Yes (JWT)</td>
+<td><code>PARENT</code> role required</td>
+<td>None</td>
+<td><code>{ isConfigured, isLocked, lockedUntil, remainingAttempts, autoLockMinutes }</code></td>
+<td><code>users</code></td>
+<td>401, 403 forbidden</td>
+<td><code>apps/parent-dashboard/app.js</code></td>
+<td><strong>IMPLEMENTED</strong> (covered in <code>security-pin.test.js</code>)</td>
+</tr>
+<tr>
+<td><code>POST /api/auth/pin/verify</code></td>
+<td>Authorize session or sensitive toggle</td>
+<td>Yes (JWT)</td>
+<td><code>PARENT</code> role required</td>
+<td><code>verifyPinSchema</code>: 4-6 digit string</td>
+<td><code>{ success, authorized, expiresAt }</code></td>
+<td><code>users</code>, <code>audit_logs</code>, n8n webhook</td>
+<td>401 wrong PIN, 423 lockout active</td>
+<td><code>apps/parent-dashboard/app.js</code></td>
+<td><strong>IMPLEMENTED</strong> (covered in <code>security-pin.test.js</code>)</td>
+</tr>
+<tr>
+<td><code>POST /api/auth/pin/set</code></td>
+<td>Set or update 4-digit Master PIN</td>
+<td>Yes (JWT)</td>
+<td><code>PARENT</code> role required</td>
+<td><code>setPinSchema</code>: pin, optional currentPin</td>
+<td><code>{ success, message }</code></td>
+<td><code>users</code>, <code>audit_logs</code>, n8n webhook</td>
+<td>401 wrong current PIN</td>
+<td><code>apps/parent-dashboard/app.js</code></td>
+<td><strong>IMPLEMENTED</strong> (covered in <code>security-pin.test.js</code>)</td>
+</tr>
+<tr>
+<td><code>POST /api/pairing/code</code></td>
+<td>Generate short-lived pairing code</td>
+<td>Yes (JWT)</td>
+<td><code>PARENT</code> role required</td>
+<td>None</td>
+<td><code>{ code, expiresAt, expiresInSeconds }</code></td>
+<td><code>pairing_codes</code></td>
+<td>401, 403, 500</td>
+<td><code>apps/parent-dashboard/app.js</code></td>
+<td><strong>IMPLEMENTED</strong> (covered in <code>pairing.test.js</code>)</td>
+</tr>
+<tr>
+<td><code>POST /api/pairing/redeem</code></td>
+<td>Link student PC using code</td>
+<td>Yes (JWT)</td>
+<td><code>STUDENT</code> role required</td>
+<td><code>redeemPairingCodeSchema</code>: code, deviceName, platform</td>
+<td><code>{ success, deviceId, device }</code></td>
+<td><code>pairing_codes</code>, <code>devices</code>, <code>parent_student_links</code></td>
+<td>400 expired or re-used code</td>
+<td><code>apps/student-desktop/src/app.js</code>, <code>main.js</code></td>
+<td><strong>IMPLEMENTED</strong> (covered in <code>pairing.test.js</code>)</td>
+</tr>
+<tr>
+<td><code>GET /api/devices</code></td>
+<td>List authorized devices</td>
+<td>Yes (JWT)</td>
+<td>Parents see linked students' devices; students see own</td>
+<td>None</td>
+<td><code>{ devices: [...] }</code></td>
+<td><code>devices</code>, <code>users</code>, <code>parent_student_links</code></td>
+<td>401, 500</td>
+<td>Both frontends</td>
+<td><strong>IMPLEMENTED</strong> (covered in <code>e2e-session-flow.test.js</code>)</td>
+</tr>
+<tr>
+<td><code>GET /api/devices/parent-link-status</code></td>
+<td>Verify student has active link</td>
+<td>Yes (JWT)</td>
+<td>Authenticated student</td>
+<td>None</td>
+<td><code>{ isLinked: boolean }</code></td>
+<td><code>parent_student_links</code></td>
+<td>500</td>
+<td><code>apps/student-desktop/src/app.js</code></td>
+<td><strong>IMPLEMENTED</strong></td>
+</tr>
+<tr>
+<td><code>GET /api/devices/:id/status</code></td>
+<td>Get device status & heartbeat</td>
+<td>Yes (JWT)</td>
+<td>Ownership/link verified</td>
+<td>UUID param</td>
+<td><code>{ id, device_name, status, last_heartbeat, ... }</code></td>
+<td><code>devices</code>, <code>parent_student_links</code></td>
+<td>404 not found / unauthorized</td>
+<td>Both frontends</td>
+<td><strong>IMPLEMENTED</strong></td>
+</tr>
+<tr>
+<td><code>POST /api/devices/:id/heartbeat</code></td>
+<td>Child device keepalive</td>
+<td>Yes (JWT)</td>
+<td><code>STUDENT</code> (must own device)</td>
+<td>UUID param</td>
+<td><code>{ success: true, status: &#39;ONLINE&#39;, timestamp }</code></td>
+<td><code>devices</code>, Socket.IO <code>device:status</code></td>
+<td>403 ownership mismatch</td>
+<td>Electron <code>main.js</code> (every 30s)</td>
+<td><strong>IMPLEMENTED</strong> (covered in <code>e2e-session-flow.test.js</code>)</td>
+</tr>
+<tr>
+<td><code>PATCH /api/devices/:id/protection</code></td>
+<td>Toggle supervised protection</td>
+<td>Yes (JWT)</td>
+<td><code>PARENT</code> (linked to student)</td>
+<td><code>updateProtectionSchema</code>: protectionEnabled, optional pin</td>
+<td><code>{ success, deviceId, protectionEnabled }</code></td>
+<td><code>devices</code>, <code>audit_logs</code>, n8n webhook, Socket.IO</td>
+<td>401 wrong PIN, 423 locked, 403 forbidden</td>
+<td><code>apps/parent-dashboard/app.js</code></td>
+<td><strong>IMPLEMENTED</strong> (covered in <code>security-pin.test.js</code>)</td>
+</tr>
+<tr>
+<td><code>GET /api/sessions</code></td>
+<td>List sessions</td>
+<td>Yes (JWT)</td>
+<td>Scoped to parent's children or student</td>
+<td>None</td>
+<td><code>{ sessions: [...] }</code></td>
+<td><code>study_sessions</code>, <code>devices</code>, <code>parent_student_links</code></td>
+<td>500</td>
+<td>Both frontends</td>
+<td><strong>IMPLEMENTED</strong></td>
+</tr>
+<tr>
+<td><code>POST /api/sessions</code></td>
+<td>Start a new study session</td>
+<td>Yes (JWT)</td>
+<td><code>STUDENT</code> (owns device & linked)</td>
+<td><code>createSessionSchema</code>: deviceId, taskText (min 3)</td>
+<td><code>{ id, student_id, device_id, task_text, status, ... }</code></td>
+<td><code>study_sessions</code>, <code>devices</code>, <code>parent_student_links</code></td>
+<td>400 validation, 403 unlinked</td>
+<td>Both frontends</td>
+<td><strong>IMPLEMENTED</strong> (covered in <code>e2e-session-flow.test.js</code>)</td>
+</tr>
+<tr>
+<td><code>GET /api/sessions/active-for-parent</code></td>
+<td>Active session hero data</td>
+<td>Yes (JWT)</td>
+<td><code>PARENT</code> role required</td>
+<td>None</td>
+<td><code>{ activeSession: { id, student_name, device_name, task_text, latest_screenshot, ... } }</code></td>
+<td><code>study_sessions</code>, <code>devices</code>, <code>context_captures</code></td>
+<td>500</td>
+<td><code>apps/parent-dashboard/app.js</code></td>
+<td><strong>IMPLEMENTED</strong> (covered in <code>e2e-session-flow.test.js</code>)</td>
+</tr>
+<tr>
+<td><code>GET /api/sessions/:id/captures</code></td>
+<td>Retrieve session screenshots</td>
+<td>Yes (JWT)</td>
+<td>Scoped to linked parent or owner student</td>
+<td>UUID param</td>
+<td><code>{ captures: [...] }</code></td>
+<td><code>context_captures</code>, <code>study_sessions</code></td>
+<td>403 unauthorized, 404 not found</td>
+<td>Parent Captures Gallery</td>
+<td><strong>IMPLEMENTED</strong></td>
+</tr>
+<tr>
+<td><code>GET /api/sessions/:id</code></td>
+<td>Session detail & metrics breakdown</td>
+<td>Yes (JWT)</td>
+<td>Scoped to parent or student</td>
+<td>UUID param</td>
+<td><code>{ session, metrics, eventsCount }</code></td>
+<td><code>study_sessions</code>, <code>activity_events</code>, <code>ai_analyses</code></td>
+<td>404 not found</td>
+<td>Both frontends</td>
+<td><strong>IMPLEMENTED</strong></td>
+</tr>
+<tr>
+<td><code>POST /api/sessions/:id/end</code></td>
+<td>End session & generate report</td>
+<td>Yes (JWT)</td>
+<td><code>STUDENT</code> (must own session)</td>
+<td>UUID param</td>
+<td>Full study report object with <code>focus_score</code></td>
+<td><code>study_sessions</code>, <code>activity_events</code>, <code>study_reports</code></td>
+<td>400 already completed, 403 forbidden</td>
+<td>Both frontends</td>
+<td><strong>IMPLEMENTED</strong> (covered in <code>e2e-session-flow.test.js</code>)</td>
+</tr>
+<tr>
+<td><code>POST /api/activity/events</code></td>
+<td>Ingest real-time window/input event</td>
+<td>Yes (JWT)</td>
+<td><code>STUDENT</code> (must own session)</td>
+<td><code>activityEventSchema</code>: sessionId, eventType, timestamp, visualContext</td>
+<td><code>{ eventId, decision, aiCategory, hasScreenshot }</code></td>
+<td><code>activity_events</code>, <code>context_captures</code>, <code>ai_analyses</code>, <code>notifications</code>, n8n webhook</td>
+<td>400 validation, 403 forbidden</td>
+<td>Desktop WindowMonitor & TabListener</td>
+<td><strong>IMPLEMENTED</strong> (covered in <code>e2e-session-flow.test.js</code>)</td>
+</tr>
+<tr>
+<td><code>POST /api/activity/events/batch</code></td>
+<td>Ingest queued offline events</td>
+<td>Yes (JWT)</td>
+<td><code>STUDENT</code></td>
+<td><code>batchActivityEventsSchema</code>: array of events (max 500)</td>
+<td><code>{ count, results: [...] }</code></td>
+<td><code>activity_events</code>, <code>context_captures</code></td>
+<td>400 validation error</td>
+<td>Desktop <code>flushOfflineQueue</code></td>
+<td><strong>IMPLEMENTED</strong></td>
+</tr>
+<tr>
+<td><code>POST /api/ai/analyze</code></td>
+<td>Direct AI contextual evaluation</td>
+<td>Yes (JWT)</td>
+<td>Authenticated user</td>
+<td><code>{ task, appName, processName, windowTitle, visualContext }</code></td>
+<td><code>{ success, data: { category, confidence, ... }, latencyMs, model }</code></td>
+<td>Configured AI Engine</td>
+<td>400 missing task, 500 error</td>
+<td>Direct evaluation / testing</td>
+<td><strong>IMPLEMENTED</strong> (covered in <code>ai-adapter.test.js</code>)</td>
+</tr>
+<tr>
+<td><code>GET /api/reports</code></td>
+<td>List study reports</td>
+<td>Yes (JWT)</td>
+<td>Scoped to parent's children or student</td>
+<td>None</td>
+<td><code>{ reports: [...] }</code></td>
+<td><code>study_reports</code>, <code>study_sessions</code>, <code>users</code></td>
+<td>500</td>
+<td>Both frontends</td>
+<td><strong>IMPLEMENTED</strong></td>
+</tr>
+<tr>
+<td><code>GET /api/reports/:id</code></td>
+<td>Retrieve study report details</td>
+<td>Yes (JWT)</td>
+<td>Scoped to authorized parent or student</td>
+<td>UUID param</td>
+<td>Full report record including <code>summary_json</code></td>
+<td><code>study_reports</code>, <code>study_sessions</code>, <code>users</code></td>
+<td>404 not found or unauthorized</td>
+<td>Reports viewer modal</td>
+<td><strong>IMPLEMENTED</strong></td>
+</tr>
+<tr>
+<td><code>GET /api/notifications</code></td>
+<td>List user notification history</td>
+<td>Yes (JWT)</td>
+<td>Authenticated user</td>
+<td>None</td>
+<td><code>{ notifications: [...] }</code></td>
+<td><code>notifications</code></td>
+<td>500</td>
+<td>Parent Notification Center</td>
+<td><strong>IMPLEMENTED</strong></td>
+</tr>
+<tr>
+<td><code>POST /api/notifications/:id/read</code></td>
+<td>Mark notification as read</td>
+<td>Yes (JWT)</td>
+<td>Authenticated recipient</td>
+<td>UUID param</td>
+<td><code>{ success: true, notification }</code></td>
+<td><code>notifications</code></td>
+<td>404 not found</td>
+<td>Parent Notification Center</td>
+<td><strong>IMPLEMENTED</strong></td>
+</tr>
+<tr>
+<td><code>GET /api/tasks</code></td>
+<td>List study tasks</td>
+<td>Yes (JWT)</td>
+<td>Scoped to parent or student</td>
+<td>None</td>
+<td><code>{ tasks: [...] }</code></td>
+<td><code>tasks</code></td>
+<td>500</td>
+<td>Both frontends</td>
+<td><strong>IMPLEMENTED</strong></td>
+</tr>
+<tr>
+<td><code>POST /api/tasks</code></td>
+<td>Create / Propose a study task</td>
+<td>Yes (JWT)</td>
+<td>Authenticated user</td>
+<td><code>{ title, description, subject, studentId }</code></td>
+<td><code>{ task }</code></td>
+<td><code>tasks</code>, Socket.IO (<code>task:proposed</code>)</td>
+<td>400 validation, 500</td>
+<td>Both frontends</td>
+<td><strong>IMPLEMENTED</strong></td>
+</tr>
+<tr>
+<td><code>PATCH /api/tasks/:id/status</code></td>
+<td>Update task status</td>
+<td>Yes (JWT)</td>
+<td>Parent approves, Student completes</td>
+<td><code>{ status }</code></td>
+<td><code>{ task }</code></td>
+<td><code>tasks</code>, Socket.IO (<code>task:status_changed</code>)</td>
+<td>400 missing status, 404</td>
+<td>Both frontends</td>
+<td><strong>IMPLEMENTED</strong></td>
+</tr>
+</tbody></table></div>
+<hr />
+<h2 id="5-complete-ai-integration-audit">5. Complete AI Integration Audit <a href="#5-complete-ai-integration-audit" class="heading-anchor">#</a></h2>
+<h3 id="51-ai-call-site-matrix">5.1 AI Call-Site Matrix <a href="#51-ai-call-site-matrix" class="heading-anchor">#</a></h3>
+<div class="table-container"><table>
+<thead><tr>
+<th>Calling Function</th>
+<th>File & Line</th>
+<th>AI Purpose</th>
+<th>Provider & Model</th>
+<th>Inputs Sent</th>
+<th>Vision Image Sent?</th>
+<th>Schema Validation</th>
+<th>Storage</th>
+<th>Failure Handling</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>processActivityEvent()</code></td>
+<td><a href="file:///d:/AIPD/services/api/src/activity/activityService.js#L127" target="_blank" rel="noopener"><code>activityService.js:127</code></a></td>
+<td>Classify activity against study task</td>
+<td>Configured via <code>AI_PROVIDER</code>: <code>ollama</code>, <code>gemini</code>, <code>openai</code>, or <code>mock</code></td>
+<td><code>task</code>, <code>appName</code>, <code>processName</code>, <code>windowTitle</code>, <code>idleSeconds</code>, <code>recentActivity</code>, <code>visualContext</code></td>
+<td><strong>YES</strong> (if event has <code>visualContext</code>)</td>
+<td>Zod <code>aiResponseSchema</code></td>
+<td><code>ai_analyses</code> table</td>
+<td>1x retry; returns fallback <code>{ success: false, category: &#39;UNCERTAIN&#39; }</code></td>
+</tr>
+<tr>
+<td><code>POST /api/ai/analyze</code></td>
+<td><a href="file:///d:/AIPD/services/api/src/ai/aiRoutes.js#L18" target="_blank" rel="noopener"><code>aiRoutes.js:18</code></a></td>
+<td>Direct/on-demand contextual analysis</td>
+<td>Same as above</td>
+<td>Same as above</td>
+<td><strong>YES</strong> (if provided in payload)</td>
+<td>Zod <code>aiResponseSchema</code></td>
+<td>Returned directly to HTTP client</td>
+<td>Returns HTTP 500 on unhandled error</td>
+</tr>
+</tbody></table></div>
+<h3 id="52-supported-providers-model-configurations">5.2 Supported Providers & Model Configurations <a href="#52-supported-providers-model-configurations" class="heading-anchor">#</a></h3>
+<ol class="doc-list">
+  <li><strong>Ollama (Default in <code>.env</code>)</strong>:</li>
+</ol>
+<ul class="doc-list">
+  <li>Model: <code>llama3.2:latest</code> (configurable via <code>OLLAMA_MODEL</code>).</li>
+  <li>Endpoint: <code>http://localhost:11434/api/chat</code>.</li>
+  <li>Timeout: 25 seconds via <code>AbortController</code>.</li>
+  <li>Format: <code>format: &#39;json&#39;</code>, <code>temperature: 0.1</code>.</li>
+  <li>Fallback: Automatically falls back to deterministic heuristic rules (<code>mockAiAnalyze</code>) upon timeout or connection refusal.</li>
+</ul>
+<ol class="doc-list">
+  <li><strong>Google Gemini</strong>:</li>
+</ol>
+<ul class="doc-list">
+  <li>Model: <code>gemini-1.5-flash</code> (configurable via <code>GEMINI_MODEL</code>).</li>
+  <li>Endpoint: <code>https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent</code>.</li>
+  <li>Vision Payload: Base64 data URLs transmitted via <code>inlineData</code> parts.</li>
+</ul>
+<ol class="doc-list">
+  <li><strong>OpenAI</strong>:</li>
+</ol>
+<ul class="doc-list">
+  <li>Model: <code>gpt-4o-mini</code> (configurable via <code>OPENAI_MODEL</code>).</li>
+  <li>Endpoint: <code>https://api.openai.com/v1/chat/completions</code>.</li>
+  <li>Vision Payload: Transmitted via <code>image_url</code> content blocks.</li>
+</ul>
+<ol class="doc-list">
+  <li><strong>Deterministic Heuristic Engine (<code>mockAiAnalyze</code>)</strong>:</li>
+</ol>
+<ul class="doc-list">
+  <li>Comprehensive safety heuristic: Scans window titles and application names for explicit content (<code>self-harm</code>, <code>suicide</code>, <code>bomb</code>, <code>explicit</code>, <code>porn</code>, <code>xxx</code>, <code>nsfw</code>, <code>adult content</code>, <code>nudity</code>, <code>erotic</code>, <code>casino</code>, <code>gambling</code>).</li>
+  <li>Relevance heuristic: Analyzes keyword intersections between assigned tasks and active window titles, recognizing coding IDEs and research tools.</li>
+</ul>
+<hr />
+<h2 id="6-api-usage-free-tiers-quotas-and-cost-controls">6. API Usage, Free Tiers, Quotas, and Cost Controls <a href="#6-api-usage-free-tiers-quotas-and-cost-controls" class="heading-anchor">#</a></h2>
+<h3 id="61-quota-network-failure-matrix">6.1 Quota & Network Failure Matrix <a href="#61-quota-network-failure-matrix" class="heading-anchor">#</a></h3>
+<div class="table-container"><table>
+<thead><tr>
+<th>Failure Scenario</th>
+<th>Current Behavior in Code</th>
+<th>Source Evidence</th>
+<th>Missing Handling</th>
+<th>Recommended Fix</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><strong>HTTP 429 (Rate Limit / Quota Exhausted)</strong></td>
+<td>Throws <code>Error(&#39;... API error 429: ...&#39;)</code>. Triggers immediate attempt 2. If attempt 2 also 429s, returns <code>{ success: false, category: &#39;UNCERTAIN&#39; }</code>.</td>
+<td><a href="file:///d:/AIPD/services/api/src/ai/aiAdapter.js#L146" target="_blank" rel="noopener"><code>aiAdapter.js:146, 194, 307</code></a></td>
+<td>No exponential backoff; no detection of <code>Retry-After</code> header; burns retry immediately.</td>
+<td>Implement exponential backoff with jitter (e.g. 1s, 3s) and inspect <code>Retry-After</code>. Fallback immediately to deterministic rule engine upon 429.</td>
+</tr>
+<tr>
+<td><strong>Request Timeout</strong></td>
+<td>Ollama aborts after 25s via <code>AbortController</code>. Gemini and OpenAI rely on standard fetch timeout (indefinite or Node default).</td>
+<td><a href="file:///d:/AIPD/services/api/src/ai/aiAdapter.js#L221" target="_blank" rel="noopener"><code>aiAdapter.js:221</code></a></td>
+<td>Gemini and OpenAI fetch calls do not attach an <code>AbortSignal</code>. A hung network socket could hold Express request workers open.</td>
+<td>Wrap all external provider calls in an <code>AbortSignal.timeout(10000)</code> (10s cap).</td>
+</tr>
+<tr>
+<td><strong>Malformed JSON from LLM</strong></td>
+<td><code>JSON.parse()</code> throws SyntaxError; loop catches error and retries once (attempt 2). If attempt 2 fails, returns <code>UNCERTAIN</code>.</td>
+<td><a href="file:///d:/AIPD/services/api/src/ai/aiAdapter.js#L274" target="_blank" rel="noopener"><code>aiAdapter.js:274-322</code></a></td>
+<td>No regex JSON extraction (<code>/\{[\s\S]*\}/</code>) to repair models that output conversational markdown fences (<code> </code>`<code>json </code>).</td>
+<td>Add a JSON substring extractor before <code>JSON.parse()</code> to strip leading/trailing conversational text.</td>
+</tr>
+<tr>
+<td><strong>Model Unavailable / Offline</strong></td>
+<td>Ollama errors are caught at <code>aiAdapter.js:282</code>; silently falls back to <code>mockAiAnalyze</code>. Session continues without failure.</td>
+<td><a href="file:///d:/AIPD/services/api/src/ai/aiAdapter.js#L282" target="_blank" rel="noopener"><code>aiAdapter.js:282-285</code></a></td>
+<td>Gemini and OpenAI do not have the same immediate silent fallback to <code>mockAiAnalyze</code> before burning retries.</td>
+<td>Unify provider fallback so that any provider network failure immediately routes through <code>mockAiAnalyze</code>.</td>
+</tr>
+<tr>
+<td><strong>Application / Server Restart</strong></td>
+<td>In-flight event ingestion requests are aborted. Since there is no durable message queue, interrupted events are lost.</td>
+<td><a href="file:///d:/AIPD/apps/student-desktop/electron/main.js#L18" target="_blank" rel="noopener"><code>apps/student-desktop/electron/main.js:18</code></a></td>
+<td>In-memory <code>offlineQueue</code> on Electron desktop is cleared on app termination. Un-synced events are not persisted to SQLite/disk.</td>
+<td>Persist desktop <code>offlineQueue</code> to local disk (e.g. <code>electron-store</code> or SQLite).</td>
+</tr>
+<tr>
+<td><span class="badge badge-danger"><strong>Missing AI Results in Final Report</strong></span></td>
+<td><code>buildSessionSummary()</code> maps events to analyses. If an event has no analysis or analysis is <code>UNCERTAIN</code> / <code>AI_ERROR</code>, it is <strong>not penalized</strong>.</td>
+<td><a href="file:///d:/AIPD/services/api/src/productivity/productivityEngine.js#L118" target="_blank" rel="noopener"><code>productivityEngine.js:118-158</code></a></td>
+<td>None (this is resilient by design: unclassified time defaults to non-distraction).</td>
+<td>Existing behavior is fair to student; maintain this architecture.</td>
+</tr>
+</tbody></table></div>
+<hr />
+<h2 id="7-desktop-monitoring-privacy-boundary-audit">7. Desktop Monitoring & Privacy Boundary Audit <a href="#7-desktop-monitoring-privacy-boundary-audit" class="heading-anchor">#</a></h2>
+<ul class="doc-list">
+  <li><strong>Operating System Hook</strong>: Native Windows foreground window detection implemented via PowerShell C# reflection executing <code>GetForegroundWindow()</code>, <code>GetWindowText()</code>, and <code>GetWindowThreadProcessId()</code>.</li>
+  <li><strong>Real Screen Capture</strong>: Captured via Electron <code>desktopCapturer.getSources({ types: [&#39;screen&#39;], thumbnailSize: { width: 1280, height: 720 } })</code>.</li>
+  <li><strong>Immediate Capture on Focus Switch</strong>: Window switches (<code>WINDOW_SWITCH</code>) bypass the 5-second cooldown debounce, capturing the screen instantly upon application change.</li>
+  <li><strong>Privacy Enforcement</strong>: Verified zero keystroke logging, zero clipboard inspection, and zero continuous video streaming.</li>
+  <li><strong>Session Boundary</strong>: Monitoring runs strictly when an active study session exists (<code>session:start</code> to <code>session:end</code>).</li>
+</ul>
+<hr />
+<h2 id="8-database-retention-audit">8. Database & Retention Audit <a href="#8-database-retention-audit" class="heading-anchor">#</a></h2>
+<h3 id="81-entity-relationship-diagram-erd">8.1 Entity Relationship Diagram (ERD) <a href="#81-entity-relationship-diagram-erd" class="heading-anchor">#</a></h3>
+<div class="mermaid">
+erDiagram
+    users ||--o{ devices : "owns (students)"
+    users ||--o{ parent_student_links : "parent / student"
+    users ||--o{ pairing_codes : "generates (parents)"
+    users ||--o{ study_sessions : "performs (students)"
+    users ||--o{ notifications : "receives"
+    users ||--o{ study_reports : "associated with"
+    users ||--o{ tasks : "creates / assigned"
+    users ||--o{ audit_logs : "acts in"
+
+    devices ||--o{ study_sessions : "hosts"
+
+    study_sessions ||--o{ activity_events : "contains"
+    study_sessions ||--o{ context_captures : "stores"
+    study_sessions ||--o| study_reports : "summarized by"
+
+    activity_events ||--o| context_captures : "linked to"
+    activity_events ||--o| ai_analyses : "evaluated by"
+    activity_events ||--o{ notifications : "triggers"
+
+    users {
+        UUID id PK
+        VARCHAR role "PARENT | STUDENT"
+        VARCHAR name
+        VARCHAR email UK
+        VARCHAR password_hash
+        VARCHAR security_pin_hash
+        INTEGER pin_failed_attempts
+        TIMESTAMP pin_locked_until
+        TIMESTAMP created_at
+    }
+
+    devices {
+        UUID id PK
+        UUID student_id FK
+        VARCHAR device_name
+        VARCHAR platform "Windows"
+        VARCHAR status "ONLINE | OFFLINE"
+        TIMESTAMP last_heartbeat
+        BOOLEAN protection_enabled
+        TIMESTAMP created_at
+    }
+
+    parent_student_links {
+        UUID id PK
+        UUID parent_id FK
+        UUID student_id FK
+        VARCHAR status "ACTIVE | REVOKED"
+        TIMESTAMP created_at
+    }
+
+    pairing_codes {
+        UUID id PK
+        UUID parent_id FK
+        VARCHAR code_hash
+        TIMESTAMP expires_at
+        TIMESTAMP used_at
+    }
+
+    study_sessions {
+        UUID id PK
+        UUID student_id FK
+        UUID device_id FK
+        TEXT task_text
+        TIMESTAMP started_at
+        TIMESTAMP ended_at
+        VARCHAR status "ACTIVE | COMPLETED"
+        NUMERIC focus_score
+    }
+
+    activity_events {
+        UUID id PK
+        UUID session_id FK
+        VARCHAR event_type
+        TIMESTAMP timestamp
+        VARCHAR app_name
+        VARCHAR process_name
+        TEXT window_title
+        INTEGER idle_seconds
+        JSONB metadata_json
+    }
+
+    context_captures {
+        UUID id PK
+        UUID session_id FK
+        UUID activity_event_id FK
+        TEXT storage_ref "Base64 PNG"
+        TIMESTAMP captured_at
+        TIMESTAMP retention_expires_at
+    }
+
+    ai_analyses {
+        UUID id PK
+        UUID activity_event_id FK
+        VARCHAR category "RELEVANT | DISTRACTED | POTENTIALLY_HARMFUL | UNCERTAIN"
+        NUMERIC confidence
+        NUMERIC task_relevance
+        VARCHAR risk_level "NONE | LOW | MEDIUM | HIGH"
+        TEXT reason
+        VARCHAR model_name
+        INTEGER latency_ms
+        JSONB raw_response_json
+    }
+
+    study_reports {
+        UUID id PK
+        UUID session_id FK,UK
+        UUID student_id FK
+        UUID parent_id FK
+        NUMERIC focus_score
+        NUMERIC productive_minutes
+        NUMERIC distraction_minutes
+        NUMERIC idle_minutes
+        JSONB summary_json
+    }
+
+    notifications {
+        UUID id PK
+        UUID recipient_user_id FK
+        VARCHAR type
+        VARCHAR title
+        TEXT body
+        VARCHAR severity "INFO | WARNING | CRITICAL"
+        UUID related_event_id FK
+        TIMESTAMP read_at
+    }
+
+    audit_logs {
+        UUID id PK
+        UUID actor_user_id FK
+        VARCHAR action
+        VARCHAR entity_type
+        VARCHAR entity_id
+        TIMESTAMP timestamp
+        JSONB metadata_json
+    }
+
+    tasks {
+        UUID id PK
+        UUID student_id FK
+        UUID parent_id FK
+        VARCHAR created_by_role
+        VARCHAR title
+        TEXT description
+        VARCHAR subject
+        VARCHAR status "PENDING | APPROVED | IN_PROGRESS | COMPLETED"
+        TIMESTAMP created_at
+    }
+</div>
+<hr />
+<h2 id="9-frontend-architecture-user-journeys">9. Frontend Architecture & User Journeys <a href="#9-frontend-architecture-user-journeys" class="heading-anchor">#</a></h2>
+<h3 id="91-page-component-to-api-mapping-table">9.1 Page / Component-to-API Mapping Table <a href="#91-page-component-to-api-mapping-table" class="heading-anchor">#</a></h3>
+<div class="table-container"><table>
+<thead><tr>
+<th>Application & View</th>
+<th>Frontend File</th>
+<th>Triggering Element</th>
+<th>API Endpoint Invoked</th>
+<th>Method</th>
+<th>Payload / Headers</th>
+<th>UI State / Feedback Rendered</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><strong>Parent Login</strong></td>
+<td><code>apps/parent-dashboard/app.js</code></td>
+<td>Form Submit (<code>#auth-form</code>)</td>
+<td><code>/api/auth/login</code></td>
+<td><code>POST</code></td>
+<td><code>{ email, password }</code></td>
+<td>Stores JWT in <code>localStorage(&#39;parent_token&#39;)</code>; transitions to <code>#dashboard-view</code></td>
+</tr>
+<tr>
+<td><strong>Parent Demo Login</strong></td>
+<td><code>apps/parent-dashboard/app.js</code></td>
+<td>1-Click Demo Button (<code>#demo-parent-btn</code>)</td>
+<td><code>/api/auth/login</code></td>
+<td><code>POST</code></td>
+<td>Demo parent credentials</td>
+<td>Instant bypass to dashboard with demo data</td>
+</tr>
+<tr>
+<td><strong>Parent Security PIN Verify</strong></td>
+<td><code>apps/parent-dashboard/app.js</code></td>
+<td>PIN Numpad Submit (<code>#parent-security-modal</code>)</td>
+<td><code>/api/auth/pin/verify</code></td>
+<td><code>POST</code></td>
+<td><code>{ pin }</code></td>
+<td>Unlocks controls for 5m; updates <code>#tamper-guard-pill</code> to unlocked green; closes modal</td>
+</tr>
+<tr>
+<td><strong>Parent Security PIN Set</strong></td>
+<td><code>apps/parent-dashboard/app.js</code></td>
+<td>Manage PIN Form (<code>#set-pin-form</code>)</td>
+<td><code>/api/auth/pin/set</code></td>
+<td><code>POST</code></td>
+<td><code>{ pin, currentPin }</code></td>
+<td>Shows success feedback; updates PIN status</td>
+</tr>
+<tr>
+<td><strong>Parent Protection Toggle</strong></td>
+<td><code>apps/parent-dashboard/app.js</code></td>
+<td>Toggle Switch on Device Card</td>
+<td><code>/api/devices/:id/protection</code></td>
+<td><code>PATCH</code></td>
+<td><code>{ protectionEnabled, pin }</code></td>
+<td>Prompts PIN modal if locked; updates toggle; emits toast</td>
+</tr>
+<tr>
+<td><strong>Parent Pairing Code</strong></td>
+<td><code>apps/parent-dashboard/app.js</code></td>
+<td>Button (<code>#generate-code-btn</code>)</td>
+<td><code>/api/pairing/code</code></td>
+<td><code>POST</code></td>
+<td>Bearer JWT</td>
+<td>Displays 6-character code in <code>#pairing-code-text</code> with active 10m countdown</td>
+</tr>
+<tr>
+<td><strong>Parent Live Monitor</strong></td>
+<td><code>apps/parent-dashboard/app.js</code></td>
+<td>Page Load / WebSocket Event</td>
+<td><code>/api/sessions/active-for-parent</code></td>
+<td><code>GET</code></td>
+<td>Bearer JWT</td>
+<td>Populates <code>#live-task-hero</code>, latest screenshot, app pill, and active student name</td>
+</tr>
+<tr>
+<td><strong>Student Login</strong></td>
+<td><code>apps/student-desktop/src/app.js</code></td>
+<td>Form Submit (<code>#auth-form</code>)</td>
+<td><code>/api/auth/login</code></td>
+<td><code>POST</code></td>
+<td><code>{ email, password }</code></td>
+<td>Stores token; checks parent link status; transitions to Task or Pairing view</td>
+</tr>
+<tr>
+<td><strong>Student Pairing</strong></td>
+<td><code>apps/student-desktop/src/app.js</code></td>
+<td>Form Submit (<code>#pairing-form</code>)</td>
+<td><code>/api/pairing/redeem</code></td>
+<td><code>POST</code></td>
+<td><code>{ code, deviceName, platform }</code></td>
+<td>On success, transitions to <code>#task-section</code></td>
+</tr>
+<tr>
+<td><strong>Student Start Session</strong></td>
+<td><code>apps/student-desktop/src/app.js</code></td>
+<td>Button (<code>#start-session-btn</code>)</td>
+<td><code>/api/sessions</code></td>
+<td><code>POST</code></td>
+<td><code>{ deviceId, taskText }</code></td>
+<td>Starts session; activates timer; starts WindowMonitor & InputTracker in Electron</td>
+</tr>
+<tr>
+<td><strong>Student End Session</strong></td>
+<td><code>apps/student-desktop/src/app.js</code></td>
+<td>Button (<code>#end-session-btn</code>)</td>
+<td><code>/api/sessions/:id/end</code></td>
+<td><code>POST</code></td>
+<td>Bearer JWT</td>
+<td>Stops monitor; displays verified focus score, timeline, and recommendations in <code>#report-section</code></td>
+</tr>
+</tbody></table></div>
+<hr />
+<h2 id="10-testing-and-reliability">10. Testing and Reliability <a href="#10-testing-and-reliability" class="heading-anchor">#</a></h2>
+<ul class="doc-list">
+  <li><strong>Automated Test Suite</strong>: Tested and passing via native <code>node:test</code> runner:</li>
+  <li><strong>Backend API</strong>: 50 tests passing across 7 test suites.</li>
+  <li><strong>Desktop Components</strong>: 5 tests passing across hardware-mocked components.</li>
+  <li><strong>Total</strong>: <strong>55 passing / 0 failing</strong>.</li>
+  <li><strong>Test Isolation</strong>: In-memory PGlite instances and deterministic heuristic AI rule engine used during test runs.</li>
+</ul>
+<hr />
+<h2 id="11-security-privacy-and-operational-risk-assessment">11. Security, Privacy, and Operational Risk Assessment <a href="#11-security-privacy-and-operational-risk-assessment" class="heading-anchor">#</a></h2>
+<ol class="doc-list">
+  <li><strong>HIGH</strong>: Synchronous AI blocking during HTTP activity ingestion requests (<code>activityService.js:127</code>).</li>
+  <li><strong>MEDIUM</strong>: Base64 screenshots stored directly inside the relational database (<code>context_captures.storage_ref</code>).</li>
+  <li><strong>MEDIUM</strong>: Absence of multi-statement SQL transactions (<code>BEGIN ... COMMIT</code>) during session completion and report generation.</li>
+  <li><strong>LOW</strong>: Missing automated daily worker to prune expired screenshot records.</li>
+  <li><strong>VERIFIED SAFE</strong>: Zero keylogging, sandboxed Electron execution, and authenticated master PIN protection.</li>
+</ol>
+<hr />
+<h2 id="12-implementation-gap-analysis">12. Implementation Gap Analysis <a href="#12-implementation-gap-analysis" class="heading-anchor">#</a></h2>
+<div class="table-container"><table>
+<thead><tr>
+<th>Feature Area</th>
+<th>Current Status</th>
+<th>Code Support & Evidence</th>
+<th>Implementation Gap / Next Step</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><strong>JWT Authentication & RBAC</strong></td>
+<td><span class="badge badge-success"><strong>Implemented</strong></span></td>
+<td><code>authRoutes.js</code>, <code>authService.js</code>, <code>authMiddleware.js</code></td>
+<td>Production deployment needs refresh tokens; currently uses 7-day access token.</td>
+</tr>
+<tr>
+<td><strong>Parent Master Security PIN</strong></td>
+<td><span class="badge badge-success"><strong>Implemented</strong></span></td>
+<td><code>pinService.js</code>, <code>002_parent_security_pin.sql</code>, <code>#parent-security-modal</code></td>
+<td>Fully functional with 5-attempt brute-force lockout and auto-lock countdown.</td>
+</tr>
+<tr>
+<td><strong>Device Pairing</strong></td>
+<td><span class="badge badge-success"><strong>Implemented</strong></span></td>
+<td><code>pairingService.js</code>, <code>pairingRoutes.js</code>, 6-char hash</td>
+<td>One-time use and 10-minute expiry enforced.</td>
+</tr>
+<tr>
+<td><strong>Session Lifecycle</strong></td>
+<td><span class="badge badge-success"><strong>Implemented</strong></span></td>
+<td><code>sessionService.js</code>, <code>sessionRoutes.js</code>, WebSockets</td>
+<td>Full start, pause, resume, and completion lifecycle operational.</td>
+</tr>
+<tr>
+<td><strong>Foreground Window Detection</strong></td>
+<td><span class="badge badge-success"><strong>Implemented</strong></span></td>
+<td><code>active-window-monitor.js</code> via PowerShell P/Invoke</td>
+<td>Works on Windows; non-Windows environments fallback to mock mode.</td>
+</tr>
+<tr>
+<td><strong>Screen Context Capture</strong></td>
+<td><span class="badge badge-success"><strong>Implemented</strong></span></td>
+<td><code>context-capture.js</code>, Electron <code>desktopCapturer</code></td>
+<td>Bypasses cooldown on window switches; captures 1280x720 base64 screenshots.</td>
+</tr>
+<tr>
+<td><strong>AI Contextual Analysis</strong></td>
+<td><span class="badge badge-success"><strong>Implemented</strong></span></td>
+<td><code>aiAdapter.js</code> (Ollama, Gemini, OpenAI, Mock)</td>
+<td>Fully functional; fallback to deterministic rules on Ollama timeout.</td>
+</tr>
+<tr>
+<td><strong>Deterministic Decision Engine</strong></td>
+<td><span class="badge badge-success"><strong>Implemented</strong></span></td>
+<td><code>decisionEngine.js</code>, Specification §9</td>
+<td>Correctly evaluates thresholds and deduplicates alerts.</td>
+</tr>
+<tr>
+<td><strong>Focus Score Engine</strong></td>
+<td><span class="badge badge-success"><strong>Implemented</strong></span></td>
+<td><code>productivityEngine.js</code>, Specification §13.2</td>
+<td>Transparent, explainable formula clamping score between 0 and 100.</td>
+</tr>
+<tr>
+<td><strong>Off-Device n8n Automation</strong></td>
+<td><span class="badge badge-success"><strong>Implemented</strong></span></td>
+<td><code>webhookService.js</code>, <code>aipd-parent-shield-workflow.json</code></td>
+<td>Webhook live on port 5678; dispatches tamper & safety alerts.</td>
+</tr>
+<tr>
+<td><strong>Durable AI Job Queue</strong></td>
+<td><strong>Planned / Absent</strong></td>
+<td>In-memory synchronous execution only</td>
+<td>No BullMQ or Redis queue; AI executes directly in HTTP request thread.</td>
+</tr>
+<tr>
+<td><strong>Object Store for Images</strong></td>
+<td><strong>Planned / Absent</strong></td>
+<td><code>storage_ref</code> stores base64 text in PostgreSQL</td>
+<td>S3/MinIO driver not yet implemented; images stored in DB.</td>
+</tr>
+<tr>
+<td><strong>Automated Data Pruning</strong></td>
+<td><span class="badge badge-success"><strong>Partially Implemented</strong></span></td>
+<td><code>retention_expires_at</code> column populated</td>
+<td>Background cleanup worker to delete expired rows is not yet implemented.</td>
+</tr>
+</tbody></table></div>
+<hr />
+<h2 id="13-prioritized-implementation-roadmap-recommended-next-steps">13. Prioritized Implementation Roadmap & Recommended Next Steps <a href="#13-prioritized-implementation-roadmap-recommended-next-steps" class="heading-anchor">#</a></h2>
+<ol class="doc-list">
+  <li><strong>Decouple AI Analysis from HTTP Ingestion</strong>: Make <code>processActivityEvent</code> acknowledge the desktop client immediately with HTTP 201, pushing the contextual analysis to an asynchronous worker.</li>
+  <li><strong>Move Screenshots to Object / Disk Storage</strong>: Store captures as image files on disk or S3/MinIO rather than raw base64 database strings.</li>
+  <li><strong>Wrap Multi-Entity Queries in Transactions</strong>: Add <code>withTransaction</code> blocks around session completion and report creation.</li>
+  <li><strong>Automate 7-Day Retention Cleanup</strong>: Add a scheduled daily SQL worker running <code>DELETE FROM context_captures WHERE retention_expires_at &lt; NOW()</code>.</li>
+  <li><strong>Implement Provider Fallback on HTTP 429</strong>: Catch rate limits on Gemini/OpenAI and route immediately to the deterministic rule engine without dropping study metrics.</li>
+</ol>
+<hr />
+<h2 id="14-questions-for-the-project-owner">14. Questions for the Project Owner <a href="#14-questions-for-the-project-owner" class="heading-anchor">#</a></h2>
+<ol class="doc-list">
+  <li><strong>Production Object Storage</strong>: When deploying to production, what cloud storage provider is preferred for screenshot captures (e.g. AWS S3, Cloudflare R2, Google Cloud Storage, or persistent local disk)?</li>
+  <li><strong>AI Provider Tiering & Budgets</strong>: What is the target monthly cost limit or expected concurrent student user volume? Should local Ollama models remain primary with cloud LLMs reserved only for high-uncertainty events?</li>
+  <li><strong>Multi-Child Supervision Scope</strong>: The current database schema supports one parent linking to multiple students (<code>parent_student_links</code>), but the dashboard currently displays one active child session at a time. Does the target MVP require a concurrent multi-child grid view?</li>
+  <li><strong>Desktop Agent Cross-Platform Support</strong>: Active window detection currently utilizes Windows PowerShell C# reflection (<code>GetForegroundWindow</code>). If macOS or Linux client devices are planned in the future, should a native C++ Node-API addon or platform-specific CLI tool (<code>osascript</code> / <code>xdotool</code>) be integrated?</li>
+  <li><strong>n8n Hosting Environment</strong>: n8n is currently executing locally on port 5678. For production deployment, will n8n run as a dedicated Docker service on the same host, or will webhooks dispatch to an external cloud-hosted n8n instance?</li>
+</ol>
+  </main>
+
+</body>
+</html>
