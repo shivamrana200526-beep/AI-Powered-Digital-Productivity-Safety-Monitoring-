@@ -592,7 +592,7 @@ async function handleProposeTask(e) {
       `"${title}" sent to your parent for approval!`
     );
   } catch (err) {
-    alert('Error proposing task: ' + err.message);
+    showToastNotification('❌ Could not propose task', err.message);
   }
 }
 window.handleProposeTask = handleProposeTask;
@@ -721,7 +721,7 @@ taskForm.addEventListener('submit', async (e) => {
 
   // Strict Pairing Gate: Prevent starting study session without a paired device
   if (!currentDeviceId) {
-    alert('Please pair your device with your parent before starting a study session.');
+    showToastNotification('⚠️ Device Not Paired', 'Please pair your device with your parent before starting a study session.');
     showSection(pairingSection);
     return;
   }
@@ -737,7 +737,7 @@ taskForm.addEventListener('submit', async (e) => {
       currentSession = res.session;
       launchActiveView(taskText);
     } else {
-      alert('Error starting session: ' + res.error);
+      showToastNotification('❌ Session Error', res.error || 'Could not start study session. Please try again.');
     }
   } else {
     // Direct REST API fallback for web preview
@@ -755,7 +755,7 @@ taskForm.addEventListener('submit', async (e) => {
       currentSession = session;
       launchActiveView(taskText);
     } catch (err) {
-      alert('Failed to start session: ' + err.message);
+      showToastNotification('❌ Failed to Start Session', err.message || 'Please check your connection and try again.');
     }
   }
 });

@@ -281,6 +281,13 @@ async function initDashboard() {
     } catch (fetchErr) {
       console.warn('Non-fatal error loading dashboard data:', fetchErr);
     }
+
+    // Auto-refresh: re-fetch devices/reports/captures every 60s so data never goes stale
+    if (window._dashboardRefreshTimer) clearInterval(window._dashboardRefreshTimer);
+    window._dashboardRefreshTimer = setInterval(() => {
+      if (!authToken) return;
+      fetchAllData().catch(() => {});
+    }, 60000);
   } catch (err) {
     console.error('initDashboard error:', err);
     if (err.message.includes('401') || err.message.includes('expired')) {
@@ -655,8 +662,7 @@ function initSocketConnection() {
   });
 
   socket.on('parent:safety_alert', (data) => {
-    fetchNotifications();
-    fetchAlerts();
+    fetchNotifications(); // reloads alert list + re-renders badge
 
     // 1. Immediately update Live Screen Hero if screenshot is attached
     if (data.screenshot && heroSsImg) {
@@ -788,10 +794,30 @@ function renderFeedItem(data, prepend = false) {
     </div>
     <div class="feed-item-right">
       ${cat ? `<span class="${cat.cls}">${cat.icon} ${cat.label}</span>` : ''}
-      ${data.hasScreenshot ? `<span class="feed-ss-badge">📷 Screenshot</span>` : ''}
+      ${data.hasScreenshot ? `<span class="feed-ss-badge" title="Click to view screenshot" style="cursor:pointer;">📷 Screenshot</span>` : ''}
       <span class="feed-time">${timeStr}</span>
     </div>
   `;
+
+  // Make entire item clickable when it has a screenshot — opens the lightbox
+  if (data.hasScreenshot) {
+    item.style.cursor = 'pointer';
+    item.title = 'Click to view full screenshot';
+    item.addEventListener('click', () => {
+      // Resolve screenshot from direct ref, or look up in captures array by captureId
+      const ref = data.captureRef
+        || data.storageRef
+        || (data.captureId && captures.find(c => c.id === data.captureId)?.storage_ref)
+        || null;
+      if (ref) {
+        openLightbox(
+          ref,
+          data.appName || 'Screen Capture',
+          `${data.windowTitle || ''} • ${timeStr}`
+        );
+      }
+    });
+  }
 
   // Color-code by severity
   if (data.aiCategory === 'POTENTIALLY_HARMFUL' || data.eventType === 'SAFETY_ALERT') {
@@ -1433,6 +1459,21 @@ function logout() {
   if (activeSessionTimer) {
     clearInterval(activeSessionTimer);
     activeSessionTimer = null;
+  }
+  // Clear pairing code countdown so it doesn't fire on stale DOM
+  if (codeCountdownTimer) {
+    clearInterval(codeCountdownTimer);
+    codeCountdownTimer = null;
+  }
+  // Clear PIN auto-lock timer
+  if (autoLockInterval) {
+    clearInterval(autoLockInterval);
+    autoLockInterval = null;
+  }
+  // Clear auto-refresh poller
+  if (window._dashboardRefreshTimer) {
+    clearInterval(window._dashboardRefreshTimer);
+    window._dashboardRefreshTimer = null;
   }
   const emailField = document.getElementById('parent-email');
   const passField = document.getElementById('parent-password');
