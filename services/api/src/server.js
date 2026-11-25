@@ -31,6 +31,30 @@ export const app = express();
 app.use(cors());
 app.use(express.json({ limit: '15mb' })); // Support base64 screen context
 
+// Ensure DB is initialized and seeded in serverless environments (e.g., Vercel)
+let dbInitPromise = null;
+function ensureDbReady() {
+  if (!dbInitPromise) {
+    dbInitPromise = (async () => {
+      await initDb();
+      await seedDb();
+    })().catch((err) => {
+      dbInitPromise = null;
+      throw err;
+    });
+  }
+  return dbInitPromise;
+}
+
+app.use('/api', async (req, res, next) => {
+  try {
+    await ensureDbReady();
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Serve Landing page, Assets, Parent Dashboard & Student Desktop static web views
 const landingDist = path.resolve(__dirname, '../../../apps/landing');
 const assetsDist = path.resolve(__dirname, '../../../apps/assets');
@@ -129,4 +153,4 @@ if (process.argv[1]?.endsWith('server.js')) {
   });
 }
 
-export default server;
+export default app;
